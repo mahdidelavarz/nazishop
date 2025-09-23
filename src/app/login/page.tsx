@@ -35,6 +35,24 @@
          }
        };
 
+       const handleGoogleLogin = async () => {
+         setLoading(true);
+         try {
+           const { error } = await supabase.auth.signInWithOAuth({
+             provider: 'google',
+             options: {
+               redirectTo: `${window.location.origin}/`,
+             },
+           });
+
+           if (error) throw error;
+         } catch (err: any) {
+           setError('خطا در ورود با گوگل: ' + err.message);
+         } finally {
+           setLoading(false);
+         }
+       };
+
        return (
          <div dir="rtl" className="container mx-auto p-4 max-w-md">
            <h1 className="text-2xl font-bold mb-4">ورود به فروشگاه آرایشی</h1>
@@ -76,6 +94,16 @@
                {loading ? 'در حال ورود...' : 'ورود'}
              </button>
            </form>
+           <div className="mt-4 text-center">
+             <button
+               onClick={handleGoogleLogin}
+               disabled={loading}
+               className="w-full bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+             >
+               <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="h-5 w-5" />
+               ورود با گوگل
+             </button>
+           </div>
            <p className="mt-4 text-center text-sm">
              حساب کاربری ندارید؟{' '}
              <Link href="/signup" className="text-blue-500 underline hover:text-blue-700">
