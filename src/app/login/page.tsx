@@ -100,7 +100,7 @@
                disabled={loading}
                className="w-full bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
              >
-               <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="h-5 w-5" />
+               {/* <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="h-5 w-5" /> */}
                ورود با گوگل
              </button>
            </div>
