@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/providers/AuthProvider";
+import LogoutButton from "@/ui/logoutButton";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -53,6 +54,7 @@ export default function HomePage() {
           مشاهده محصولات
         </Link>
       </section>
+      <LogoutButton />
     </div>
   );
 }

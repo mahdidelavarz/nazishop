@@ -11,8 +11,13 @@ export async function middleware(req: NextRequest) {
   // Get Supabase access token from cookies
   const supabaseSession = req.cookies.get("sb-access-token")?.value;
 
+  // ✅ Protected paths that require login
+  const protectedPaths = ["/store", "/admin-products", "/profile"];
+
+  const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
+
   // Not logged in → block access to protected pages
-  if (!supabaseSession && !isPublic && pathname.startsWith("/store")) {
+  if (!supabaseSession && isProtected) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("redirectedFrom", pathname);
     return NextResponse.redirect(loginUrl);
