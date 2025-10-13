@@ -68,7 +68,7 @@ export default function ProductsPage() {
               {/* image */}
               <div className="relative w-full aspect-[1/1.2] overflow-hidden">
                 <img
-                  src={product.thumbnail_url}
+                  src={`/${product.thumbnail_url}`}
                   alt={product.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />

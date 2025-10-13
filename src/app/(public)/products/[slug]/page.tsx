@@ -60,8 +60,8 @@ export default function SingleProductPage() {
         )
       : 0;
 
-  const firstImage =
-    product.details?.[0]?.images?.[0] || product.thumbnail_url || "/no-image.jpg";
+  // const firstImage =
+  //   product.details?.[0]?.images?.[0] || product.thumbnail_url || `/${product.thumbnail_url}` || "/no-image.jpg";
 
   return (
     <div dir="rtl" className="max-w-6xl mx-auto p-6">
@@ -70,7 +70,7 @@ export default function SingleProductPage() {
         {/* image gallery */}
         <div className="flex flex-col gap-3">
           <img
-            src={firstImage}
+             src={`/${product.thumbnail_url}`}
             alt={product.title}
             className="w-full aspect-square object-cover rounded-lg border"
           />
