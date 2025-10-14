@@ -1,11 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useCart } from "../hooks/useCart";
-import { useAuth } from "@/shared/providers/AuthProvider";
+import { useCartQuery } from "../hooks/useCart";
 
 export function CartIcon() {
-  const user = useAuth();
-  const { data: cart } = useCart(user?.id);
+  const { data: cart } = useCartQuery();
 
   return (
     <Link href="/cart" className="relative">

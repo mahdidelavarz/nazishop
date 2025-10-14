@@ -17,7 +17,6 @@ export async function addToCartApi({ productId, quantity }: CartItemPayload) {
     }
 }
 
-
 export async function fetchCartItems(): Promise<CartItem[]> {
     const { data, error } = await supabase
         .from("cart_items")
@@ -34,7 +33,7 @@ export async function fetchCartItems(): Promise<CartItem[]> {
     // normalize products to single object (Supabase returns array)
     return (data as any[]).map(item => ({
         ...item,
-        products: item.products?.[0] || null,
+        products: item.products || null,
     }));
 }
 
