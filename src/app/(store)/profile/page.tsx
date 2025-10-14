@@ -3,8 +3,8 @@
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/providers/AuthProvider";
+import { supabase } from "@/shared/lib/supabase";
+import { useAuth } from "@/shared/providers/AuthProvider";
 
 type ProfileForm = {
   full_name: string;

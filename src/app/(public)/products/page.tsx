@@ -1,54 +1,26 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { fetchProductsApi } from "@/features/products/services/productsService";
+import { Product } from "@/features/products/types/productsType";
 import Link from "next/link";
 
-type Product = {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  original_price?: number;
-  thumbnail_url: string;
-  slug: string;
-  brand?: string;
-};
+export const revalidate = 60; // ISR: re-generate page every 60 seconds
 
-async function fetchProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("id, title, description, price, original_price, thumbnail_url, slug, brand")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data;
-}
-
-export default function ProductsPage() {
-  const { data, error, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
-
-  if (isLoading)
-    return <p className="text-center py-10 text-gray-500">در حال بارگذاری محصولات...</p>;
-
-  if (error)
-    return <p className="text-center py-10 text-red-500">خطا در بارگذاری محصولات</p>;
+export default async function ProductsPage() {
+  const products: Product[] = await fetchProductsApi();
 
   return (
     <div dir="rtl" className="max-w-7xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-8 text-gray-800 border-b pb-2">
+      <h1 className="text-2xl font-bold mb-8 border-b pb-2 text-gray-800">
         محصولات فروشگاه
       </h1>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
-        {data?.map((product) => {
+        {products.map((product) => {
           const discount =
             product.original_price && product.original_price > product.price
               ? Math.round(
-                  ((product.original_price - product.price) / product.original_price) * 100
+                  ((product.original_price - product.price) /
+                    product.original_price) *
+                    100
                 )
               : 0;
 
@@ -58,14 +30,12 @@ export default function ProductsPage() {
               href={`/products/${product.slug}`}
               className="relative border rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-lg transition duration-200 flex flex-col group"
             >
-              {/* discount badge */}
               {discount > 0 && (
                 <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
                   %{discount} تخفیف
                 </div>
               )}
 
-              {/* image */}
               <div className="relative w-full aspect-[1/1.2] overflow-hidden">
                 <img
                   src={`/${product.thumbnail_url}`}
@@ -74,15 +44,15 @@ export default function ProductsPage() {
                 />
               </div>
 
-              {/* content */}
               <div className="flex flex-col p-3 flex-1">
                 {product.brand && (
-                  <span className="text-xs text-gray-500 mb-1">{product.brand}</span>
+                  <span className="text-xs text-gray-500 mb-1">
+                    {product.brand}
+                  </span>
                 )}
                 <h2 className="font-semibold text-sm text-gray-800 line-clamp-2 mb-1">
                   {product.title}
                 </h2>
-
                 <p className="text-xs text-gray-500 line-clamp-2 flex-1">
                   {product.description}
                 </p>

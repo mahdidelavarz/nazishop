@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@/providers/AuthProvider";
-import LogoutButton from "@/ui/logoutButton";
+import { useAuth } from "@/shared/providers/AuthProvider";
+import LogoutButton from "@/shared/ui/logoutButton";
 import Link from "next/link";
 
 export default function HomePage() {

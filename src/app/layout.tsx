@@ -1,6 +1,6 @@
 import "./globals.css";
-import { AuthProvider } from "@/providers/AuthProvider";
-import QueryProvider from "@/providers/QueryProviders";
+import { AuthProvider } from "@/shared/providers/AuthProvider";
+import QueryProvider from "@/shared/providers/QueryProviders";
 
 export default function RootLayout({
   children,

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "../hooks/useCart";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/shared/providers/AuthProvider";
 
 export function CartIcon() {
   const user = useAuth();

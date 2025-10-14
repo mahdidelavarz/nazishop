@@ -1,58 +1,25 @@
-"use client";
+import AddToCartButton from "@/features/products/components/AddToCartBtn";
+import { fetchSingleProductApi } from "@/features/products/services/productsService";
+import { Product } from "@/features/products/types/productsType";
 
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 
-type ProductDetail = {
-  description: string | null;
-  specifications: Record<string, string> | null;
-  images?: string[];
-};
+export const revalidate = 60;
 
-type Product = {
-  id: string;
-  title: string;
-  description: string | null;
-  price: number;
-  original_price?: number | null;
-  stock: number;
-  brand?: string | null;
-  thumbnail_url?: string | null;
-  details?: ProductDetail[] | null;
-};
-
-export default function SingleProductPage() {
-  const { slug } = useParams();
-
-  const { data: product, isLoading, error } = useQuery({
-    queryKey: ["product", slug],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          id,
-          title,
-          description,
-          price,
-          original_price,
-          brand,
-          stock,
-          thumbnail_url,
-          details:product_details(description, specifications, images)
-        `)
-        .eq("slug", slug)
-        .single();
-
-      if (error) throw error;
-      return data as Product;
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const product: Product = await fetchSingleProductApi(params.slug);
+  return {
+    title: `${product.title} | فروشگاه آرایشی`,
+    description: product.description || "خرید بهترین محصولات آرایشی",
+    openGraph: {
+      title: product.title,
+      description: product.description,
+      images: product.thumbnail_url ? [{ url: product.thumbnail_url }] : [],
     },
-  });
+  };
+}
 
-  if (isLoading)
-    return <p className="text-center py-10 text-gray-500">در حال بارگذاری محصول...</p>;
-  if (error || !product) return <p className="text-center py-10 text-red-500">محصول یافت نشد.</p>;
-
+export default async function SingleProductPage({ params }: { params: { slug: string } }) {
+  const product: Product = await fetchSingleProductApi(params.slug);
   const discount =
     product.original_price && product.original_price > product.price
       ? Math.round(
@@ -60,17 +27,13 @@ export default function SingleProductPage() {
         )
       : 0;
 
-  // const firstImage =
-  //   product.details?.[0]?.images?.[0] || product.thumbnail_url || `/${product.thumbnail_url}` || "/no-image.jpg";
-
   return (
     <div dir="rtl" className="max-w-6xl mx-auto p-6">
-      {/* layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-2xl shadow-sm p-6">
-        {/* image gallery */}
+        {/* images */}
         <div className="flex flex-col gap-3">
           <img
-             src={`/${product.thumbnail_url}`}
+            src={`/${product.thumbnail_url}`}
             alt={product.title}
             className="w-full aspect-square object-cover rounded-lg border"
           />
@@ -93,10 +56,8 @@ export default function SingleProductPage() {
               <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
             )}
             <h1 className="text-2xl font-bold text-gray-900">{product.title}</h1>
-
             <p className="mt-3 text-gray-700 leading-relaxed">{product.description}</p>
 
-            {/* pricing */}
             <div className="mt-6">
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-extrabold text-pink-600">
@@ -119,20 +80,12 @@ export default function SingleProductPage() {
             </div>
           </div>
 
-          <button
-            disabled={product.stock <= 0}
-            className={`mt-6 w-full py-3 rounded-lg font-bold text-white ${
-              product.stock > 0
-                ? "bg-pink-600 hover:bg-pink-700"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-          >
-            افزودن به سبد خرید
-          </button>
+          {/* client component for interactivity */}
+          <AddToCartButton productId={product.id} stock={product.stock} />
         </div>
       </div>
 
-      {/* product details section */}
+      {/* details */}
       {product.details?.[0] && (
         <div className="mt-10 bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-xl font-bold mb-4 text-gray-800">جزئیات محصول</h2>
@@ -148,7 +101,7 @@ export default function SingleProductPage() {
                 {Object.entries(product.details[0].specifications).map(([key, value]) => (
                   <tr key={key} className="border-b">
                     <td className="py-2 text-gray-500 w-1/3">{key}</td>
-                    <td className="py-2 text-gray-800">{value as string}</td>
+                    <td className="py-2 text-gray-800">{value}</td>
                   </tr>
                 ))}
               </tbody>
