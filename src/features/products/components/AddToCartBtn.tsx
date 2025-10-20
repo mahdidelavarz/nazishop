@@ -1,14 +1,15 @@
 "use client";
 import { useAddToCart } from "@/features/cart/hooks/useCart";
 import { useState } from "react";
+import { Product } from "../types/productsType";
 
 interface AddToCartButtonProps {
-  productId: string;
+  product: Product;
   stock: number;
 }
 
 export default function AddToCartButton({
-  productId,
+  product,
   stock,
 }: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1);
@@ -16,7 +17,7 @@ export default function AddToCartButton({
 
   const handleAddToCart = () => {
     if (stock <= 0) return;
-    addToCart({ productId, quantity });
+    addToCart({ product, quantity });
   };
 
   return (

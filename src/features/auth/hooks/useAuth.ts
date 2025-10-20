@@ -3,10 +3,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "../store/authStore";
-import { loginWithEmailApi, loginWithGoogleApi } from '@/features/auth/services/authServices';
+import {
+  loginWithEmailApi,
+  loginWithGoogleApi,
+} from "@/features/auth/services/authServices";
 import toast from "react-hot-toast";
 import { LoginFormValues, LoginResponse } from "../types/authType";
-
+import { mergeLocalCartToServer } from "@/features/cart/utils/mergeLocalCartToServer";
 
 export const useLoginWithEmail = () => {
   const router = useRouter();
@@ -16,8 +19,13 @@ export const useLoginWithEmail = () => {
 
   return useMutation<LoginResponse, Error, LoginFormValues>({
     mutationFn: (data) => loginWithEmailApi(data),
-    onSuccess: ({ user, profile_completed }) => {
+    onSuccess: async ({ user, profile_completed }) => {
       setUser(user);
+
+      // merge local cart
+      await mergeLocalCartToServer(user.id);
+      toast.success("سبد خرید شما با حساب کاربری همگام‌سازی شد");
+
       router.push(profile_completed ? redirectTo : "/profile");
       toast.success("با موفقیت وارد شدید");
     },
@@ -28,10 +36,10 @@ export const useLoginWithEmail = () => {
 };
 
 export const useLoginWithGoogle = () => {
-    return useMutation({
-        mutationFn: loginWithGoogleApi,
-        onError: (error: Error) => {
-            toast.error(`خطا در ورود با گوگل: ${error.message}`);
-        },
-    });
+  return useMutation({
+    mutationFn: loginWithGoogleApi,
+    onError: (error: Error) => {
+      toast.error(`خطا در ورود با گوگل: ${error.message}`);
+    },
+  });
 };

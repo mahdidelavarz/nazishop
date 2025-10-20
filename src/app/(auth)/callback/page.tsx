@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/shared/lib/supabase";
+import { mergeLocalCartToServer } from "@/features/cart/utils/mergeLocalCartToServer";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -20,6 +21,13 @@ export default function AuthCallbackPage() {
         console.error("❌ Failed to get user:", error);
         router.push("/login");
         return;
+      }
+
+
+      try {
+        await mergeLocalCartToServer(user.id);
+      } catch (cartError) {
+        console.error("❌ Failed to merge local cart:", cartError);
       }
 
       const { data: profile, error: profileError } = await supabase

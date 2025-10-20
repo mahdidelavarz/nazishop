@@ -2,10 +2,16 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { addToCartApi, fetchCartItems, removeCartItem } from "../services/cartServices";
-import { CartItem, CartItemPayload } from "../types/cartTypes";
+import {
+  addToCartApi,
+  fetchCartItems,
+  removeCartItem,
+} from "../services/cartServices";
+import { CartItem } from "../types/cartTypes";
 import { useAuthStore } from "@/features/auth/store/authStore";
-
+import { useLocalCartStore } from "../store/localCartStore";
+import { supabase } from "@/shared/lib/supabase";
+import { Product } from "@/features/products/types/productsType";
 
 // ------------------------
 // Fetch cart items
@@ -21,21 +27,46 @@ export const useCartQuery = () => {
 // ------------------------
 // Add to cart
 // ------------------------
-export const useAddToCart = () => {
-  const queryClient = useQueryClient();
+export function useAddToCart() {
+  const user = useAuthStore((s) => s.user);
+  const localCart = useLocalCartStore();
 
   return useMutation({
-    mutationFn: (payload: CartItemPayload) => addToCartApi(payload),
-    onSuccess: () => {
-      toast.success("محصول به سبد خرید اضافه شد");
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-    onError: (error: any) => {
-      toast.error(`خطا در افزودن به سبد: ${error.message}`);
+    mutationFn: async ({
+      product,
+      quantity,
+    }: {
+      product: Product;
+      quantity: number;
+    }) => {
+      if (!user) {
+        // Guest user → store locally
+        localCart.addItem({
+          id: crypto.randomUUID(),
+          product_id: product.id,
+          quantity,
+          products: product,
+        });
+        toast.success("محصول به سبد خرید اضافه شد");
+        return;
+      }
+
+      // Logged-in user → send to Supabase
+      const { error } = await supabase.from("cart_items").insert({
+        user_id: user.id,
+        product_id: product.id,
+        quantity,
+      });
+
+      if (error) {
+        toast.error(`خطا در افزودن به سبد خرید: ${error.message}`);
+        throw error;
+      }
+
+      toast.success("محصول با موفقیت به سبد خرید اضافه شد");
     },
   });
-};
-
+}
 // ------------------------
 // Remove from cart
 // ------------------------

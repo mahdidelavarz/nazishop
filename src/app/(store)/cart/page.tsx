@@ -1,11 +1,14 @@
 "use client";
 
 import { useCartQuery, useRemoveCartItem } from "@/features/cart/hooks/useCart";
+import { useProtectedRoute } from "@/shared/hooks/useProtectedRoute";
 import Link from "next/link";
 
 export default function CartPage() {
   const { data: cartItems, isLoading, error } = useCartQuery();
   const { mutate: removeItem, isPending: removing } = useRemoveCartItem();
+
+  useProtectedRoute();
 
   if (isLoading)
     return (
@@ -37,14 +40,13 @@ export default function CartPage() {
     0
   );
 
-
   return (
     <div dir="rtl" className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">سبد خرید</h1>
 
       <div className="flex flex-col gap-4">
         {cartItems.map((item) => {
-          console.log(item , 'this is item');
+          console.log(item, "this is item");
           return (
             <div
               key={item.id}

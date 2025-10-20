@@ -81,7 +81,7 @@ export default async function SingleProductPage({ params }: { params: { slug: st
           </div>
 
           {/* client component for interactivity */}
-          <AddToCartButton productId={product.id} stock={product.stock} />
+          <AddToCartButton product={product} stock={product.stock} />
         </div>
       </div>
 

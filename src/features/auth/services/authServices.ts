@@ -29,15 +29,17 @@ export const loginWithEmailApi = async (
     };
 };
 
-export const loginWithGoogleApi = async (redirectTo: string) => {
-    const redirectParam = encodeURIComponent(redirectTo);
-    const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-            redirectTo: `${window.location.origin}/callback?redirectedFrom=${redirectParam}`,
-        },
-    });
-    if (error) throw error;
+export const loginWithGoogleApi = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/callback`,
+    },
+  });
+
+  if (error) throw new Error(error.message);
+
+  return data; 
 };
 
 export const getProfileCompletionApi = async (userId: string) => {
