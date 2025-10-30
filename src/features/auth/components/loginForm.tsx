@@ -76,7 +76,7 @@ export default function LoginForm() {
 
       <button
         type="button"
-        onClick={() => googleLogin("/")}
+        onClick={() => googleLogin()}
         disabled={googlePending}
         className="w-full bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:bg-gray-400"
       >
