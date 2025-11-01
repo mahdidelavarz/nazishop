@@ -6,9 +6,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
+import CartBadge from "@/shared/ui/CartBadgeComponent";
 
 export default function HomePage() {
-  const { isAuthenticated, phoneNumber, userId, logout, setAuthenticated, setUserId, setPhoneNumber } = useAuthStore();
+  const {
+    isAuthenticated,
+    phoneNumber,
+    userId,
+    logout,
+    setAuthenticated,
+    setUserId,
+    setPhoneNumber,
+  } = useAuthStore();
   const router = useRouter();
   const [userName, setUserName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -17,14 +26,18 @@ export default function HomePage() {
   useEffect(() => {
     const syncAuthState = async () => {
       // Check for auth_state cookie (set by Google OAuth callback)
-      const cookies = document.cookie.split(';');
-      const authStateCookie = cookies.find(c => c.trim().startsWith('auth_state='));
-      
+      const cookies = document.cookie.split(";");
+      const authStateCookie = cookies.find((c) =>
+        c.trim().startsWith("auth_state=")
+      );
+
       if (authStateCookie) {
         try {
-          const authStateStr = decodeURIComponent(authStateCookie.split('=')[1]);
+          const authStateStr = decodeURIComponent(
+            authStateCookie.split("=")[1]
+          );
           const authState = JSON.parse(authStateStr);
-          
+
           if (authState.isAuthenticated) {
             setAuthenticated(true);
             setUserId(authState.userId);
@@ -32,14 +45,16 @@ export default function HomePage() {
             if (authState.email) setUserEmail(authState.email);
           }
         } catch (e) {
-          console.error('Error parsing auth state:', e);
+          console.error("Error parsing auth state:", e);
         }
       }
 
       // Also check Supabase session for Google OAuth users
-      const { supabase } = await import('@/shared/lib/supabase');
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const { supabase } = await import("@/shared/lib/supabase");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session?.user) {
         setAuthenticated(true);
         setUserId(session.user.id);
@@ -77,7 +92,10 @@ export default function HomePage() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+    <div
+      dir="rtl"
+      className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50"
+    >
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
@@ -92,11 +110,19 @@ export default function HomePage() {
               </h1>
             </Link>
 
+            <nav>
+              <CartBadge />
+            </nav>
+
             {/* User Section */}
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
                 <div className="hidden md:flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
-                  <Icon icon="ph:user-circle-duotone" width={24} className="text-gray-600" />
+                  <Icon
+                    icon="ph:user-circle-duotone"
+                    width={24}
+                    className="text-gray-600"
+                  />
                   <span className="text-sm font-medium text-gray-700">
                     {userName || phoneNumber || "کاربر"}
                   </span>
@@ -141,7 +167,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-100 to-purple-100 px-6 py-3 rounded-full mb-4">
               <Icon icon="ph:hand-waving-duotone" className="text-2xl" />
               <span className="font-medium text-gray-800">
-                سلام {userName} عزیز، خوش آمدید! 
+                سلام {userName} عزیز، خوش آمدید!
               </span>
             </div>
           )}
@@ -190,7 +216,11 @@ export default function HomePage() {
           {/* Feature 1 */}
           <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon icon="ph:truck-duotone" className="text-pink-600" width={32} />
+              <Icon
+                icon="ph:truck-duotone"
+                className="text-pink-600"
+                width={32}
+              />
             </div>
             <h3 className="font-bold text-lg mb-2">ارسال سریع</h3>
             <p className="text-gray-600 text-sm">
@@ -201,7 +231,11 @@ export default function HomePage() {
           {/* Feature 2 */}
           <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon icon="ph:shield-check-duotone" className="text-purple-600" width={32} />
+              <Icon
+                icon="ph:shield-check-duotone"
+                className="text-purple-600"
+                width={32}
+              />
             </div>
             <h3 className="font-bold text-lg mb-2">ضمانت اصالت</h3>
             <p className="text-gray-600 text-sm">
@@ -212,7 +246,11 @@ export default function HomePage() {
           {/* Feature 3 */}
           <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon icon="ph:headset-duotone" className="text-blue-600" width={32} />
+              <Icon
+                icon="ph:headset-duotone"
+                className="text-blue-600"
+                width={32}
+              />
             </div>
             <h3 className="font-bold text-lg mb-2">پشتیبانی ۲۴/۷</h3>
             <p className="text-gray-600 text-sm">
@@ -224,20 +262,40 @@ export default function HomePage() {
 
       {/* Popular Categories */}
       <section className="container mx-auto px-6 py-12">
-        <h2 className="text-3xl font-bold text-center mb-8">دسته‌بندی‌های محبوب</h2>
+        <h2 className="text-3xl font-bold text-center mb-8">
+          دسته‌بندی‌های محبوب
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
           {[
-            { name: "لوازم آرایشی", icon: "ph:makeup-brush-duotone", color: "from-pink-400 to-pink-600" },
-            { name: "مراقبت پوست", icon: "ph:drop-duotone", color: "from-blue-400 to-blue-600" },
-            { name: "عطر و ادکلن", icon: "ph:flower-lotus-duotone", color: "from-purple-400 to-purple-600" },
-            { name: "مراقبت مو", icon: "ph:hair-dryer-duotone", color: "from-orange-400 to-orange-600" },
+            {
+              name: "لوازم آرایشی",
+              icon: "ph:makeup-brush-duotone",
+              color: "from-pink-400 to-pink-600",
+            },
+            {
+              name: "مراقبت پوست",
+              icon: "ph:drop-duotone",
+              color: "from-blue-400 to-blue-600",
+            },
+            {
+              name: "عطر و ادکلن",
+              icon: "ph:flower-lotus-duotone",
+              color: "from-purple-400 to-purple-600",
+            },
+            {
+              name: "مراقبت مو",
+              icon: "ph:hair-dryer-duotone",
+              color: "from-orange-400 to-orange-600",
+            },
           ].map((category) => (
             <Link
               key={category.name}
               href="/products"
               className="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-all transform hover:scale-105 text-center"
             >
-              <div className={`w-16 h-16 bg-gradient-to-br ${category.color} rounded-full flex items-center justify-center mx-auto mb-3`}>
+              <div
+                className={`w-16 h-16 bg-gradient-to-br ${category.color} rounded-full flex items-center justify-center mx-auto mb-3`}
+              >
                 <Icon icon={category.icon} className="text-white" width={32} />
               </div>
               <p className="font-medium text-gray-700">{category.name}</p>

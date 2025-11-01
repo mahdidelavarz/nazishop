@@ -1,3 +1,4 @@
+import CartSyncProvider from "@/features/cart/components/CartSyncProvider";
 import "./globals.css";
 import { AuthProvider } from "@/shared/providers/AuthProvider";
 import QueryProvider from "@/shared/providers/QueryProviders";
@@ -13,7 +14,9 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <Toaster position="top-center" />
-          <AuthProvider>{children}</AuthProvider>
+          <CartSyncProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </CartSyncProvider>
         </QueryProvider>
       </body>
     </html>
