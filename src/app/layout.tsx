@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fa" className={vazir.variable}>
+    <html lang="fa" dir="rtl" className={vazir.variable}>
       <body>
         <QueryProvider>
           <Toaster position="top-center" />
