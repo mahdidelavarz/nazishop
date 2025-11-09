@@ -12,7 +12,7 @@ interface AuthState {
   isAuthenticated: boolean;
   userId: string | null;
   setPhoneNumber: (phone: string) => void;
-  setEmail: (email: string) => void;  // ← declared here
+  setEmail: (email: string) => void;
   setAuthenticated: (status: boolean) => void;
   setUserId: (id: string) => void;
   logout: () => void;
@@ -28,34 +28,46 @@ export const useAuthStore = create<AuthState>()(
       userId: null,
 
       setUser: (user) => set({ user }),
+      
       clearUser: () => set({ user: null }),
+      
       setPhoneNumber: (phone) => set({ phoneNumber: phone }),
-      setEmail: (email) => set({ email }), // ← ADD THIS LINE
+      
+      setEmail: (email) => set({ email: email }),
+      
       setAuthenticated: (status) => set({ isAuthenticated: status }),
+      
       setUserId: (id) => set({ userId: id }),
+      
       logout: () => {
+        // Clear cookies
         if (typeof window !== 'undefined') {
-          document.cookie = 'session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-          localStorage.removeItem('userId');
+          document.cookie = 'session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+          document.cookie = 'auth_state=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+          localStorage.removeItem('userId')
+          
+          // Clear guest cart on logout (important!)
+          localStorage.removeItem('guest-cart')
         }
-
+        
+        // Clear store
         set({
           user: null,
           phoneNumber: null,
-          email: null, // ← also clear email
+          email: null,
           isAuthenticated: false,
           userId: null
-        });
+        })
       }
     }),
     {
-      name: 'auth-storage',
+      name: 'auth-storage', // localStorage key
       partialize: (state) => ({
         phoneNumber: state.phoneNumber,
-        email: state.email,        // ← include email in persistence
+        email: state.email,
         isAuthenticated: state.isAuthenticated,
         userId: state.userId
       })
     }
   )
-);
+)

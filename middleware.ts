@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get('session_token')?.value
-  const { pathname } = request.url
+  const  pathname  = request.url
 
   // Public paths that don't require authentication
   const publicPaths = ['/login', '/signup', '/api/auth/send-otp', '/api/auth/verify-otp']

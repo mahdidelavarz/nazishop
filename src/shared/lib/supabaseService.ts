@@ -1,5 +1,4 @@
 import { supabase } from "@/shared/lib/supabase";
-import toast from "react-hot-toast";
 
 type TableName = "cart_items" | "products" | "orders";
 
