@@ -9,7 +9,8 @@ import {
 } from "@/features/auth/services/authServices";
 import toast from "react-hot-toast";
 import { LoginFormValues, LoginResponse } from "../types/authType";
-import { mergeLocalCartToServer } from "@/features/cart/utils/mergeLocalCartToServer";
+import { mergeLocalCartToServer } from '@/features/cart/utils/mergeLocalCartToServer';
+
 
 export const useLoginWithEmail = () => {
   const router = useRouter();

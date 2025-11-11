@@ -1,4 +1,5 @@
-import { supabase } from "@/shared/lib/supabase";
+import { supabase } from "./supabase/client";
+
 
 type TableName = "cart_items" | "products" | "orders";
 
