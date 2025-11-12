@@ -109,6 +109,7 @@ export interface VerifyOTPResponse {
   profileCompleted: boolean
   accessToken: string
   refreshToken: string
+  role : "customer" | "admin"
 }
 
 // ==================== GOOGLE OAUTH TYPES ====================

@@ -70,6 +70,7 @@ export async function createUserRecord(data: {
       full_name: data.fullName || null,
       role: data.role || 'customer',
       profile_completed: !!data.fullName,
+      created_at: new Date().toISOString(),
     })
     .select()
     .single()
@@ -144,9 +145,10 @@ export async function updateUserProfile(
   userId: string,
   updates: {
     full_name?: string
-    profile_completed?: boolean
+    profile_completed: boolean
     email?: string
     phone_number?: string
+    updated_at: string
   }
 ) {
   const { data, error } = await supabaseAdmin
@@ -177,6 +179,7 @@ export async function storeRefreshToken(data: {
     token_hash: data.tokenHash,
     expires_at: data.expiresAt.toISOString(),
     revoked: false,
+    created_at: new Date().toISOString(),
   })
 
   if (error) {
@@ -218,7 +221,7 @@ export async function isRefreshTokenValid(tokenHash: string): Promise<boolean> {
 export async function revokeRefreshToken(tokenHash: string) {
   const { error } = await supabaseAdmin
     .from('refresh_tokens')
-    .update({ revoked: true })
+    .update({ revoked: true, updated_at: new Date().toISOString() })
     .eq('token_hash', tokenHash)
 
   if (error) {
@@ -233,7 +236,7 @@ export async function revokeRefreshToken(tokenHash: string) {
 export async function revokeAllUserTokens(userId: string) {
   const { error } = await supabaseAdmin
     .from('refresh_tokens')
-    .update({ revoked: true })
+    .update({ revoked: true, updated_at: new Date().toISOString() })
     .eq('user_id', userId)
 
   if (error) {

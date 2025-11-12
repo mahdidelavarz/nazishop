@@ -25,6 +25,7 @@ type UserProfile = {
   postal_code: string | null;
   birthday: string | null;
   profile_completed: boolean;
+  updated_at : string
 };
 
 export default function ProfilePage() {

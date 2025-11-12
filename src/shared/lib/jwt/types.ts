@@ -9,10 +9,10 @@ export interface JWTPayload {
   userId: string;
   
   /** User's phone number (for OTP auth) */
-  phoneNumber?: string;
+  phoneNumber: string | null;
   
   /** User's email (for OAuth) */
-  email?: string;
+  email: string | null;
   
   /** User's role (customer, admin, etc.) */
   role: 'customer' | 'admin';
@@ -63,8 +63,8 @@ export interface TokenPair {
  */
 export interface TokenUserData {
   userId: string;
-  phoneNumber?: string;
-  email?: string;
+  phoneNumber: string | null;
+  email: string | null;
   role: 'customer' | 'admin';
 }
 

@@ -1,9 +1,10 @@
 import "./globals.css";
-import CartSyncProvider from "@/features/cart/components/CartSyncProvider";
-import { AuthProvider } from "@/shared/providers/AuthProvider";
+// import CartSyncProvider from "@/features/cart/components/CartSyncProvider";
+
 import QueryProvider from "@/shared/providers/QueryProviders";
 import { Toaster } from "react-hot-toast";
 import localFont from "next/font/local";
+import AuthProvider from "@/shared/providers/AuthProvider";
 
 const vazir = localFont({
   src: [
@@ -30,9 +31,9 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <Toaster position="top-center" />
-          <CartSyncProvider>
+          {/* <CartSyncProvider> */}
             <AuthProvider>{children}</AuthProvider>
-          </CartSyncProvider>
+          {/* </CartSyncProvider> */}
         </QueryProvider>
       </body>
     </html>

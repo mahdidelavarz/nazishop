@@ -1,50 +1,24 @@
-"use client";
+// src/features/auth/components/AuthProvider.tsx
+'use client'
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useEffect } from 'react'
 
-import type { User } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase/client";
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
+interface AuthProviderProps {
+  children: React.ReactNode
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-});
+/**
+ * Auth Provider Component
+ * Initializes auth state and handles auto-refresh
+ * Wrap your app with this component
+ */
+export default function AuthProvider({ children }: AuthProviderProps) {
+  const { isLoading } = useAuth()
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // You can add a global loading screen here if needed
+  // For now, we'll just render children
 
-  useEffect(() => {
-    // Get current session
-    const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (data?.session?.user) {
-        setUser(data.session.user);
-      }
-      setLoading(false);
-    };
-    getSession();
-
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => useContext(AuthContext);
+  return <>{children}</>
+}

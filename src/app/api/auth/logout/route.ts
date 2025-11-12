@@ -21,7 +21,7 @@ function hashToken(token: string): string {
 export async function POST(request: NextRequest) {
   try {
     // Get refresh token from cookie
-    const refreshToken = getRefreshTokenFromCookie()
+    const refreshToken = await getRefreshTokenFromCookie()
 
     if (refreshToken) {
       // Hash token for database lookup
