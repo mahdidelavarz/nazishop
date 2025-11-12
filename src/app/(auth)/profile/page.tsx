@@ -1,7 +1,8 @@
 // app/(auth)/profile/page.tsx
 
-import ProtectedRoute from '@/features/auth/components/ProtectedRoute'
 import ProfileForm from '@/features/auth/components/ProfileForm'
+import ProtectedRoute from '@/features/auth/components/ProtectedRoute'
+
 
 export default function ProfilePage() {
   return (

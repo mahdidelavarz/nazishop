@@ -37,7 +37,6 @@ export default function ProfileForm() {
         full_name: data.fullName,
         email: data.email || null,
         profile_completed: true,
-        updated_at: new Date().toISOString(),
       }),
     onSuccess: (data) => {
       // Update store

@@ -1,21 +1,13 @@
-// src/features/auth/services/authService.ts
-
+// src/features/auth/services/authService.ts (no 's' at the end)
 import {
-  SendOTPRequest,
   SendOTPResponse,
-  VerifyOTPRequest,
   VerifyOTPResponse,
   RefreshTokenResponse,
   LogoutResponse,
 } from '../types/authType'
 import { supabase } from '@/shared/lib/supabase/client'
 
-/**
- * Send OTP to phone number
- */
-export async function sendOTPApi(
-  phoneNumber: string
-): Promise<SendOTPResponse> {
+export async function sendOTPApi(phoneNumber: string): Promise<SendOTPResponse> {
   const response = await fetch('/api/auth/send-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,9 +23,6 @@ export async function sendOTPApi(
   return data.data
 }
 
-/**
- * Verify OTP code
- */
 export async function verifyOTPApi(
   phoneNumber: string,
   otpCode: string
@@ -53,13 +42,10 @@ export async function verifyOTPApi(
   return data.data
 }
 
-/**
- * Refresh access token
- */
 export async function refreshTokenApi(): Promise<RefreshTokenResponse> {
   const response = await fetch('/api/auth/refresh-token', {
     method: 'POST',
-    credentials: 'include', // Important: send cookies
+    credentials: 'include',
   })
 
   const data = await response.json()
@@ -71,9 +57,6 @@ export async function refreshTokenApi(): Promise<RefreshTokenResponse> {
   return data.data
 }
 
-/**
- * Logout user
- */
 export async function logoutApi(): Promise<LogoutResponse> {
   const response = await fetch('/api/auth/logout', {
     method: 'POST',
@@ -89,9 +72,6 @@ export async function logoutApi(): Promise<LogoutResponse> {
   return data.data
 }
 
-/**
- * Login with Google OAuth
- */
 export async function loginWithGoogleApi(redirectTo?: string) {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -107,9 +87,6 @@ export async function loginWithGoogleApi(redirectTo?: string) {
   }
 }
 
-/**
- * Get current user from database
- */
 export async function getCurrentUserApi(userId: string) {
   const { data, error } = await supabase
     .from('users')
@@ -124,22 +101,21 @@ export async function getCurrentUserApi(userId: string) {
   return data
 }
 
-/**
- * Update user profile
- */
 export async function updateProfileApi(
   userId: string,
   updates: {
     full_name?: string
-    email: string | null
+    email?: string | null
     phone_number?: string
     profile_completed?: boolean
-    updated_at: string
   }
 ) {
   const { data, error } = await supabase
     .from('users')
-    .update(updates)
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', userId)
     .select()
     .single()

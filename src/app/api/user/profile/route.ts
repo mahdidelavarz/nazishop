@@ -1,8 +1,9 @@
 // app/api/user/profile/route.ts (Example)
 import { NextRequest, NextResponse } from 'next/server'
 
-import { supabaseAdmin } from '@/shared/lib/supabaseAdmin'
+
 import { getSessionFromRequest } from '@/features/auth/utils/sessionUtils'
+import { supabaseAdmin } from '@/shared/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
     try {
@@ -75,7 +76,8 @@ export async function PUT(request: NextRequest) {
                 address,
                 postal_code,
                 birthday,
-                profile_completed: true
+                profile_completed: true,
+                updated_at: new Date().toISOString()
             })
             .eq('id', session.userId)
             .select()

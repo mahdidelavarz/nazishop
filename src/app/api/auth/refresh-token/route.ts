@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       // Revoke old refresh token
       await supabaseAdmin
         .from('refresh_tokens')
-        .update({ revoked: true })
+        .update({ revoked: true , updated_at: new Date().toISOString()})
         .eq('token_hash', tokenHash)
 
       // Generate new refresh token
@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
         token_hash: newTokenHash,
         expires_at: refreshExpiresAt.toISOString(),
         revoked: false,
+        created_at: new Date().toISOString(),
       })
 
       // Set new refresh token cookie

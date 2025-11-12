@@ -37,9 +37,10 @@ export function useVerifyOTP() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams?.get('redirectedFrom') || '/'
-  const { setUser, setAuthenticated } = useAuthStore()
+  const { setUser, user } = useAuthStore()
   const { items } = useLocalCartStore();
 
+  console.log(user, "stored user")
   return useMutation({
     mutationFn: ({
       phoneNumber,
@@ -60,8 +61,6 @@ export function useVerifyOTP() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
-
-      setAuthenticated(true)
 
       // Store userId in localStorage
       if (typeof window !== 'undefined') {

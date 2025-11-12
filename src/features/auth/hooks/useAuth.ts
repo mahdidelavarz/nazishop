@@ -1,88 +1,70 @@
 // src/features/auth/hooks/useAuth.ts
-
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
-import {
-  getSession,
-  getUserFromSession,
-  autoRefreshToken,
-  clearSession,
-  isAuthenticated as checkIsAuthenticated,
-} from '../services/sessionService'
-import { logoutApi, getCurrentUserApi } from '../services/authServices'
+import { getCurrentUserApi, logoutApi } from '../services/authServices'
 import { showSuccessToast, showErrorToast } from '@/shared/utils/errors'
+import { clearSession, autoRefreshToken } from '../services/sessionService'
 
-/**
- * Main Auth Hook
- * Provides authentication state and methods
- */
 export function useAuth() {
   const router = useRouter()
-  const { user, setUser, clearUser, isAuthenticated, setAuthenticated } =
-    useAuthStore()
-  const [isLoading, setIsLoading] = useState(true)
+  const { user, isAuthenticated, isLoading, setUser, clearUser, setLoading } = useAuthStore()
 
-  // Initialize auth state on mount
+  // Initialize auth state
   useEffect(() => {
     const initAuth = async () => {
+      setLoading(true)
       try {
-        // Auto-refresh token if needed
-        await autoRefreshToken()
+        // Fetch session from secure API route
+        const res = await fetch('/api/auth/session', {
+          credentials: 'include', // include httpOnly cookies
+        })
+        if (!res.ok) throw new Error('Session fetch failed')
 
-        // Get session info
-        const session = getSession()
+        const session = await res.json()
 
-        if (session.isAuthenticated && session.user) {
-          setAuthenticated(true)
-
-          // Fetch full user profile if not in store
+        if (session?.isAuthenticated && session.user) {
+          // Sync store user if not set or different
           if (!user || user.id !== session.user.id) {
             try {
               const userData = await getCurrentUserApi(session.user.id)
               setUser({
                 id: userData.id,
-                phoneNumber: userData.phone_number,
-                email: userData.email,
                 fullName: userData.full_name,
+                email: userData.email,
+                phoneNumber: userData.phone_number,
                 role: userData.role,
                 profileCompleted: userData.profile_completed,
                 createdAt: userData.created_at,
                 updatedAt: userData.updated_at,
               })
-            } catch (error) {
-              console.error('Failed to fetch user data:', error)
+            } catch (err) {
+              console.error('Failed to fetch full user data', err)
+              clearUser()
             }
           }
         } else {
-          setAuthenticated(false)
           clearUser()
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        setAuthenticated(false)
+      } catch (err) {
+        console.error('Auth initialization error:', err)
         clearUser()
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
     initAuth()
   }, [])
 
-  // Auto-refresh token periodically (every 10 minutes)
+  // Auto-refresh token periodically (10 minutes)
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const interval = setInterval(
-      () => {
-        autoRefreshToken().catch((error) => {
-          console.error('Auto refresh failed:', error)
-        })
-      },
-      10 * 60 * 1000
-    ) // 10 minutes
+    const interval = setInterval(() => {
+      autoRefreshToken().catch((err) => console.error('Auto refresh failed:', err))
+    }, 10 * 60 * 1000)
 
     return () => clearInterval(interval)
   }, [isAuthenticated])
@@ -91,50 +73,31 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
-      // Clear session
       clearSession()
-
-      // Clear store
-      clearUser()
-      setAuthenticated(false)
-
-      // Show success message
+      useAuthStore.getState().logout()
       showSuccessToast('خروج با موفقیت انجام شد')
-
-      // Redirect to login
       router.push('/login')
     },
-    onError: (error: Error) => {
-      // Still clear session even on error
+    onError: (err: Error) => {
       clearSession()
-      clearUser()
-      setAuthenticated(false)
-
-      showErrorToast(error, 'خطا در خروج')
+      useAuthStore.getState().logout()
+      showErrorToast(err, 'خطا در خروج')
       router.push('/login')
     },
   })
 
   return {
-    // State
     user,
     isAuthenticated,
     isLoading,
-    
-    // Methods
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
-    
-    // Helpers
     isAdmin: user?.role === 'admin',
     isCustomer: user?.role === 'customer',
   }
 }
 
-/**
- * Hook to require authentication
- * Redirects to login if not authenticated
- */
+// Hook to require auth
 export function useRequireAuth() {
   const router = useRouter()
   const { isAuthenticated, isLoading } = useAuth()
@@ -148,10 +111,7 @@ export function useRequireAuth() {
   return { isAuthenticated, isLoading }
 }
 
-/**
- * Hook to require admin role
- * Redirects to home if not admin
- */
+// Hook to require admin
 export function useRequireAdmin() {
   const router = useRouter()
   const { user, isLoading } = useAuth()

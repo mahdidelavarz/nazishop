@@ -1,106 +1,61 @@
 // src/features/auth/services/sessionService.ts
 
-import {
-  getAccessTokenClient,
-  getRefreshTokenClient,
-  clearAuthCookiesClient,
-} from '@/shared/utils/cookies.client'
-import {
-  decodeTokenUnsafe,
-  isTokenExpired,
-  shouldRefreshToken,
-  getUserIdFromToken,
-} from '@/shared/lib/jwt/verify'
+import { clearAuthCookiesClient } from '@/shared/utils/cookies.client'
 import { AuthUser, ClientSessionInfo } from '../types/authType'
 import { refreshTokenApi } from './authServices'
 
+
 /**
- * Get current session from cookies
+ * Get session from server
+ * This is the ONLY way to read session on client
  */
-export function getSession(): ClientSessionInfo {
-  const accessToken = getAccessTokenClient()
+export async function getSession(): Promise<ClientSessionInfo> {
+  try {
+    const res = await fetch('/api/auth/session', {
+      credentials: 'include', // Send cookies
+      cache: 'no-store',
+    })
 
-  if (!accessToken) {
+    const data = await res.json()
+
+    if (!data.isAuthenticated) {
+      return { 
+        isAuthenticated: false, 
+        user: null, 
+        accessTokenExpiry: null, 
+        needsRefresh: false 
+      }
+    }
+
     return {
-      isAuthenticated: false,
-      user: null,
-      accessTokenExpiry: null,
+      isAuthenticated: true,
+      user: data.user as AuthUser,
+      accessTokenExpiry: data.accessTokenExpiry,
       needsRefresh: false,
     }
-  }
-
-  // Check if token is expired
-  if (isTokenExpired(accessToken)) {
-    return {
-      isAuthenticated: false,
-      user: null,
-      accessTokenExpiry: null,
-      needsRefresh: true,
+  } catch (error) {
+    console.error('Failed to get session:', error)
+    return { 
+      isAuthenticated: false, 
+      user: null, 
+      accessTokenExpiry: null, 
+      needsRefresh: false 
     }
-  }
-
-  // Decode token to get user info
-  const payload = decodeTokenUnsafe(accessToken)
-  if (!payload) {
-    return {
-      isAuthenticated: false,
-      user: null,
-      accessTokenExpiry: null,
-      needsRefresh: false,
-    }
-  }
-
-  const user: AuthUser = {
-    id: payload.userId,
-    phoneNumber: payload.phoneNumber,
-    email: payload.email,
-    role: payload.role,
-  }
-
-  return {
-    isAuthenticated: true,
-    user,
-    accessTokenExpiry: payload.exp * 1000, // Convert to milliseconds
-    needsRefresh: shouldRefreshToken(accessToken),
   }
 }
 
-/**
- * Check if user is authenticated
- */
-export function isAuthenticated(): boolean {
-  const session = getSession()
+export async function isAuthenticated(): Promise<boolean> {
+  const session = await getSession()
   return session.isAuthenticated
 }
 
-/**
- * Get user from session
- */
-export function getUserFromSession(): AuthUser | null {
-  const session = getSession()
+export async function getUserFromSession(): Promise<AuthUser | null> {
+  const session = await getSession()
   return session.user
 }
 
-/**
- * Get user ID from session
- */
-export function getUserIdFromSession(): string | null {
-  const accessToken = getAccessTokenClient()
-  if (!accessToken) return null
-  return getUserIdFromToken(accessToken)
-}
+// ❌ REMOVED: getUserIdFromSession (can't access token on client)
 
-/**
- * Check if session needs refresh
- */
-export function sessionNeedsRefresh(): boolean {
-  const session = getSession()
-  return session.needsRefresh
-}
-
-/**
- * Refresh session
- */
 export async function refreshSession(): Promise<boolean> {
   try {
     await refreshTokenApi()
@@ -111,56 +66,33 @@ export async function refreshSession(): Promise<boolean> {
   }
 }
 
-/**
- * Clear session (logout)
- */
 export function clearSession() {
   clearAuthCookiesClient()
-
-  // Clear localStorage
+  
   if (typeof window !== 'undefined') {
     localStorage.removeItem('userId')
     localStorage.removeItem('guest-cart')
   }
 }
 
-/**
- * Auto-refresh token if needed
- * Call this on app mount or route changes
- */
 export async function autoRefreshToken(): Promise<void> {
-  const session = getSession()
-
-  if (session.needsRefresh && !session.isAuthenticated) {
-    // Token expired, try to refresh
-    const refreshToken = getRefreshTokenClient()
-    if (refreshToken) {
-      await refreshSession()
-    }
-  } else if (session.isAuthenticated && session.needsRefresh) {
-    // Token expiring soon, refresh proactively
+  const session = await getSession()
+  
+  if (!session.isAuthenticated) {
+    // Try to refresh if we have refresh token
     await refreshSession()
   }
 }
 
-/**
- * Check if user has role
- */
-export function hasRole(role: 'customer' | 'admin'): boolean {
-  const user = getUserFromSession()
+export async function hasRole(role: 'customer' | 'admin'): Promise<boolean> {
+  const user = await getUserFromSession()
   return user?.role === role
 }
 
-/**
- * Check if user is admin
- */
-export function isAdmin(): boolean {
-  return hasRole('admin')
+export async function isAdmin(): Promise<boolean> {
+  return await hasRole('admin')
 }
 
-/**
- * Check if user is customer
- */
-export function isCustomer(): boolean {
-  return hasRole('customer')
+export async function isCustomer(): Promise<boolean> {
+  return await hasRole('customer')
 }

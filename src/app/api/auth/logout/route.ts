@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       // Revoke refresh token in database
       const { error } = await supabaseAdmin
         .from('refresh_tokens')
-        .update({ revoked: true })
+        .update({ revoked: true , updated_at: new Date().toISOString() })
         .eq('token_hash', tokenHash)
 
       if (error) {

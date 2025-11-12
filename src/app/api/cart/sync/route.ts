@@ -1,7 +1,7 @@
 // app/api/cart/sync/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/shared/lib/supabaseAdmin'
 import { getSessionFromRequest } from '@/features/auth/utils/sessionUtils'
+import { supabaseAdmin } from '@/shared/lib/supabase/server'
 
 interface GuestCartItem {
   product_id: string

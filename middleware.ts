@@ -1,39 +1,86 @@
-// middleware.ts (root level)
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+// middleware.ts (in project root, not in app/)
 
-export function middleware(request: NextRequest) {
-  const sessionToken = request.cookies.get('session_token')?.value
-  const  pathname  = request.url
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyAccessToken } from '@/shared/lib/jwt/verify'
 
-  // Public paths that don't require authentication
-  const publicPaths = ['/login', '/signup', '/api/auth/send-otp', '/api/auth/verify-otp']
-  const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+const PROTECTED_ROUTES = ['/profile', '/orders', '/checkout', '/dashboard']
+const ADMIN_ROUTES = ['/admin']
+const PUBLIC_ROUTES = ['/', '/login', '/callback', '/products']
 
-  // If accessing protected route without session, redirect to login
-  if (!isPublicPath && !sessionToken) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirectedFrom', pathname)
-    return NextResponse.redirect(loginUrl)
+function matchesRoute(path: string, routes: string[]): boolean {
+  return routes.some(route => {
+    if (route.endsWith('*')) {
+      return path.startsWith(route.slice(0, -1))
+    }
+    return path === route || path.startsWith(route + '/')
+  })
+}
+
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname
+
+  // Skip middleware for static files and API routes
+  if (
+    path.startsWith('/_next') ||
+    path.startsWith('/api') ||
+    path.includes('.')
+  ) {
+    return NextResponse.next()
   }
 
-  // If logged in and trying to access login page, redirect to home
-  if (sessionToken && pathname === '/login') {
-    return NextResponse.redirect(new URL('/', request.url))
+  // Get access token from cookie
+  const accessToken = request.cookies.get('access_token')?.value
+
+  const isProtectedRoute = matchesRoute(path, PROTECTED_ROUTES)
+  const isAdminRoute = matchesRoute(path, ADMIN_ROUTES)
+  const isPublicRoute = matchesRoute(path, PUBLIC_ROUTES)
+
+  // Public routes - allow
+  if (isPublicRoute && !isProtectedRoute && !isAdminRoute) {
+    return NextResponse.next()
   }
 
-  return NextResponse.next()
+  // No token - redirect to login
+  if (!accessToken) {
+    if (isProtectedRoute || isAdminRoute) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirectedFrom', path)
+      return NextResponse.redirect(loginUrl)
+    }
+    return NextResponse.next()
+  }
+
+  // Verify token
+  try {
+    const payload = await verifyAccessToken(accessToken)
+
+    // Admin route - check role
+    if (isAdminRoute && payload.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+
+    return NextResponse.next()
+  } catch (error) {
+    console.error('Middleware auth error:', error)
+
+    if (isProtectedRoute || isAdminRoute) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirectedFrom', path)
+      
+      const response = NextResponse.redirect(loginUrl)
+      response.cookies.delete('access_token')
+      response.cookies.delete('refresh_token')
+      
+      return response
+    }
+
+    const response = NextResponse.next()
+    response.cookies.delete('access_token')
+    response.cookies.delete('refresh_token')
+    return response
+  }
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*|api).*)'],
 }
