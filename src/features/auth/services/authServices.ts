@@ -106,23 +106,21 @@ export async function updateProfileApi(
   updates: {
     full_name?: string
     email?: string | null
-    phone_number?: string
     profile_completed?: boolean
   }
 ) {
-  const { data, error } = await supabase
-    .from('users')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', userId)
-    .select()
-    .single()
+  const response = await fetch('/api/auth/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // Send cookies
+    body: JSON.stringify(updates),
+  })
 
-  if (error) {
-    throw new Error('خطا در بروزرسانی پروفایل')
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.error || 'خطا در بروزرسانی پروفایل')
   }
 
-  return data
+  return data.data
 }

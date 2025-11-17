@@ -1,28 +1,3 @@
-// /types/auth.ts
-export interface LoginFormValues {
-  email: string;
-  password: string;
-}
-
-// export interface UserProfile {
-//   id: string;
-//   email: string;
-//   full_name?: string;
-//   phone_number?: string;
-//   address?: string;
-//   postal_code?: string;
-//   birthday?: string;
-//   profile_completed?: boolean;
-//   role?: string;
-// }
-
-// export interface LoginResponse {
-//   user: UserProfile;
-//   profile_completed: boolean;
-// }
-
-//! new version
-
 // src/features/auth/types/auth.types.ts
 
 /**
@@ -32,28 +7,50 @@ export interface LoginFormValues {
 export type UserRole = 'customer' | 'admin'
 
 /**
+ * Authentication Provider
+ */
+export type AuthProvider = 'otp' | 'google'
+
+/**
  * User Profile
- * Complete user information from database
+ * Complete user information from database (maps to Supabase users table)
  */
 export interface UserProfile {
   id: string
   phoneNumber: string | null
   email: string | null
   fullName: string | null
+  address: string | null
+  postalCode: string | null
+  birthday: string | null
   role: UserRole
   profileCompleted: boolean
-  createdAt: string
-  updatedAt: string
+}
+
+/**
+ * Database User Row (snake_case from Supabase)
+ * Used for type-safe database operations
+ */
+export interface DatabaseUser {
+  id: string
+  phone_number: string | null
+  email: string | null
+  full_name: string | null
+  address: string | null
+  postal_code: string | null
+  birthday: string | null
+  role: UserRole
+  profile_completed: boolean
 }
 
 /**
  * Auth User
- * Minimal user data for authenticated session
+ * Minimal user data for authenticated session (stored in JWT)
  */
 export interface AuthUser {
   id: string
-  phoneNumber?: string | null
-  email?: string | null
+  phoneNumber: string | null
+  email: string | null
   role: UserRole
 }
 
@@ -109,7 +106,7 @@ export interface VerifyOTPResponse {
   profileCompleted: boolean
   accessToken: string
   refreshToken: string
-  role : "customer" | "admin"
+  role: UserRole // Fixed: Now uses UserRole type
 }
 
 // ==================== GOOGLE OAUTH TYPES ====================
@@ -128,9 +125,24 @@ export interface GoogleOAuthCallbackData {
 export interface OAuthUserData {
   id: string
   email: string
-  fullName?: string
-  phoneNumber?: string
-  provider: 'google'
+  fullName?: string | null
+  phoneNumber?: string | null
+  provider: AuthProvider
+}
+
+/**
+ * Google Login Response
+ */
+export interface GoogleLoginResponse {
+  success: boolean
+  message: string
+  userId: string
+  email: string
+  isNewUser: boolean
+  profileCompleted: boolean
+  accessToken: string
+  refreshToken: string
+  role: UserRole
 }
 
 // ==================== LOGIN/REGISTER TYPES ====================
@@ -154,6 +166,9 @@ export interface LoginResponse {
 export interface ProfileCompletionRequest {
   fullName: string
   email?: string
+  address?: string
+  postalCode?: string
+  birthday?: string
 }
 
 /**
@@ -166,6 +181,31 @@ export interface ProfileCompletionResponse {
 }
 
 // ==================== TOKEN TYPES ====================
+
+/**
+ * JWT Payload
+ * Data encoded in access token
+ */
+export interface JWTPayload {
+  userId: string
+  phoneNumber: string | null
+  email: string | null
+  role: UserRole
+  iat: number
+  exp: number
+}
+
+/**
+ * Refresh Token Data (stored in database)
+ */
+export interface RefreshTokenData {
+  id: string
+  userId: string
+  tokenHash: string
+  expiresAt: string
+  createdAt: string
+  revoked: boolean
+}
 
 /**
  * Token Refresh Request
@@ -204,11 +244,12 @@ export interface LogoutResponse {
 /**
  * Session Data
  * Data stored in JWT and retrieved on verification
+ * @deprecated Use JWTPayload instead
  */
 export interface SessionData {
   userId: string
-  phoneNumber?: string | null
-  email?: string | null
+  phoneNumber: string | null
+  email: string | null
   role: UserRole
   iat: number
   exp: number
@@ -242,6 +283,9 @@ export interface ProfileFormValues {
   fullName: string
   email?: string
   phoneNumber?: string
+  address?: string
+  postalCode?: string
+  birthday?: string
 }
 
 // ==================== API RESPONSE TYPES ====================
@@ -249,7 +293,7 @@ export interface ProfileFormValues {
 /**
  * Generic API Success Response
  */
-export interface APISuccessResponse<T = any> {
+export interface APISuccessResponse<T = unknown> {
   success: true
   data: T
   message?: string
@@ -261,14 +305,14 @@ export interface APISuccessResponse<T = any> {
 export interface APIErrorResponse {
   success: false
   error: string
-  code?: number
-  details?: any
+  code?: string // Changed from number to string for better error codes
+  details?: unknown
 }
 
 /**
  * API Response (Union Type)
  */
-export type APIResponse<T = any> = APISuccessResponse<T> | APIErrorResponse
+export type APIResponse<T = unknown> = APISuccessResponse<T> | APIErrorResponse
 
 // ==================== VALIDATION TYPES ====================
 
@@ -290,14 +334,49 @@ export interface EmailValidationResult {
   error?: string
 }
 
+/**
+ * OTP Code Validation Result
+ */
+export interface OTPValidationResult {
+  isValid: boolean
+  error?: string
+}
+
+// ==================== RATE LIMITING TYPES ====================
+
+/**
+ * Rate Limit Info
+ */
+export interface RateLimitInfo {
+  limit: number
+  remaining: number
+  resetTime: number // Unix timestamp
+}
+
+/**
+ * Rate Limit Error
+ */
+export interface RateLimitError extends APIErrorResponse {
+  code: 'RATE_LIMIT_EXCEEDED'
+  rateLimitInfo: RateLimitInfo
+}
+
 // ==================== CART MERGE TYPES ====================
+
+/**
+ * Cart Item (basic structure)
+ */
+export interface CartItem {
+  productId: string
+  quantity: number
+}
 
 /**
  * Cart Merge Data
  * Used when merging guest cart to authenticated user
  */
 export interface CartMergeData {
-  guestCartItems: any[] // Replace 'any' with your cart item type
+  guestCartItems: CartItem[]
   userId: string
 }
 
@@ -332,6 +411,19 @@ export interface AuthErrorContext {
   phoneNumber?: string
   email?: string
   timestamp: number
+  error: string
+}
+
+/**
+ * Login Log Entry
+ */
+export interface LoginLogEntry {
+  id: string
+  userId: string
+  loginAt: string
+  ipAddress: string | null
+  userAgent: string | null
+  createdAt: string
 }
 
 // ==================== TYPE GUARDS ====================
@@ -339,23 +431,34 @@ export interface AuthErrorContext {
 /**
  * Type guard for UserProfile
  */
-export function isUserProfile(user: any): user is UserProfile {
+export function isUserProfile(user: unknown): user is UserProfile {
+  if (!user || typeof user !== 'object') return false
+  
+  const u = user as Record<string, unknown>
+  
   return (
-    user &&
-    typeof user.id === 'string' &&
-    typeof user.profileCompleted === 'boolean' &&
-    typeof user.role === 'string'
+    typeof u.id === 'string' &&
+    (typeof u.phoneNumber === 'string' || u.phoneNumber === null) &&
+    (typeof u.email === 'string' || u.email === null) &&
+    (typeof u.fullName === 'string' || u.fullName === null) &&
+    typeof u.profileCompleted === 'boolean' &&
+    (u.role === 'customer' || u.role === 'admin')
   )
 }
 
 /**
  * Type guard for AuthUser
  */
-export function isAuthUser(user: any): user is AuthUser {
+export function isAuthUser(user: unknown): user is AuthUser {
+  if (!user || typeof user !== 'object') return false
+  
+  const u = user as Record<string, unknown>
+  
   return (
-    user &&
-    typeof user.id === 'string' &&
-    typeof user.role === 'string'
+    typeof u.id === 'string' &&
+    (typeof u.phoneNumber === 'string' || u.phoneNumber === null) &&
+    (typeof u.email === 'string' || u.email === null) &&
+    (u.role === 'customer' || u.role === 'admin')
   )
 }
 
@@ -375,4 +478,71 @@ export function isAPIError(
   response: APIResponse
 ): response is APIErrorResponse {
   return response.success === false
+}
+
+/**
+ * Type guard for Rate Limit Error
+ */
+export function isRateLimitError(
+  response: APIResponse
+): response is RateLimitError {
+  return (
+    response.success === false &&
+    'code' in response &&
+    response.code === 'RATE_LIMIT_EXCEEDED'
+  )
+}
+
+/**
+ * Type guard for JWTPayload
+ */
+export function isJWTPayload(payload: unknown): payload is JWTPayload {
+  if (!payload || typeof payload !== 'object') return false
+  
+  const p = payload as Record<string, unknown>
+  
+  return (
+    typeof p.userId === 'string' &&
+    (typeof p.phoneNumber === 'string' || p.phoneNumber === null) &&
+    (typeof p.email === 'string' || p.email === null) &&
+    (p.role === 'customer' || p.role === 'admin') &&
+    typeof p.iat === 'number' &&
+    typeof p.exp === 'number'
+  )
+}
+
+// ==================== HELPER UTILITIES ====================
+
+/**
+ * Convert DatabaseUser (snake_case) to UserProfile (camelCase)
+ */
+export function databaseUserToProfile(dbUser: DatabaseUser): UserProfile {
+  return {
+    id: dbUser.id,
+    phoneNumber: dbUser.phone_number,
+    email: dbUser.email,
+    fullName: dbUser.full_name,
+    address: dbUser.address,
+    postalCode: dbUser.postal_code,
+    birthday: dbUser.birthday,
+    role: dbUser.role,
+    profileCompleted: dbUser.profile_completed,
+  }
+}
+
+/**
+ * Convert UserProfile (camelCase) to DatabaseUser (snake_case)
+ */
+export function profileToDatabaseUser(profile: UserProfile): DatabaseUser {
+  return {
+    id: profile.id,
+    phone_number: profile.phoneNumber,
+    email: profile.email,
+    full_name: profile.fullName,
+    address: profile.address,
+    postal_code: profile.postalCode,
+    birthday: profile.birthday,
+    role: profile.role,
+    profile_completed: profile.profileCompleted,
+  }
 }

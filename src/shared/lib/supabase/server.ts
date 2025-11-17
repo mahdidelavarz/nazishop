@@ -148,7 +148,6 @@ export async function updateUserProfile(
     profile_completed: boolean
     email?: string
     phone_number?: string
-    updated_at: string
   }
 ) {
   const { data, error } = await supabaseAdmin
@@ -221,7 +220,7 @@ export async function isRefreshTokenValid(tokenHash: string): Promise<boolean> {
 export async function revokeRefreshToken(tokenHash: string) {
   const { error } = await supabaseAdmin
     .from('refresh_tokens')
-    .update({ revoked: true, updated_at: new Date().toISOString() })
+    .update({ revoked: true })
     .eq('token_hash', tokenHash)
 
   if (error) {
@@ -236,7 +235,7 @@ export async function revokeRefreshToken(tokenHash: string) {
 export async function revokeAllUserTokens(userId: string) {
   const { error } = await supabaseAdmin
     .from('refresh_tokens')
-    .update({ revoked: true, updated_at: new Date().toISOString() })
+    .update({ revoked: true })
     .eq('user_id', userId)
 
   if (error) {

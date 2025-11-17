@@ -1,5 +1,5 @@
 // src/features/auth/hooks/useAuth.ts
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
@@ -10,39 +10,46 @@ import { clearSession, autoRefreshToken } from '../services/sessionService'
 export function useAuth() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, setUser, clearUser, setLoading } = useAuthStore()
+  const hasInitialized = useRef(false)
 
   // Initialize auth state
   useEffect(() => {
+    if (hasInitialized.current) return
+    hasInitialized.current = true
+
     const initAuth = async () => {
+      if (user && isAuthenticated) {
+        console.log('User already authenticated, skipping session check')
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
       try {
-        // Fetch session from secure API route
         const res = await fetch('/api/auth/session', {
-          credentials: 'include', // include httpOnly cookies
+          credentials: 'include',
+          cache: 'no-store',
         })
-        if (!res.ok) throw new Error('Session fetch failed')
 
         const session = await res.json()
 
         if (session?.isAuthenticated && session.user) {
-          // Sync store user if not set or different
-          if (!user || user.id !== session.user.id) {
-            try {
-              const userData = await getCurrentUserApi(session.user.id)
-              setUser({
-                id: userData.id,
-                fullName: userData.full_name,
-                email: userData.email,
-                phoneNumber: userData.phone_number,
-                role: userData.role,
-                profileCompleted: userData.profile_completed,
-                createdAt: userData.created_at,
-                updatedAt: userData.updated_at,
-              })
-            } catch (err) {
-              console.error('Failed to fetch full user data', err)
-              clearUser()
-            }
+          try {
+            const userData = await getCurrentUserApi(session.user.id)
+            setUser({
+              id: userData.id,
+              phoneNumber: userData.phone_number,
+              email: userData.email,
+              fullName: userData.full_name,
+              role: userData.role,
+              profileCompleted: userData.profile_completed,
+              address: "",
+              postalCode: "",
+              birthday: ""
+            })
+          } catch (err) {
+            console.error('Failed to fetch full user data', err)
+            clearUser()
           }
         } else {
           clearUser()
@@ -56,15 +63,18 @@ export function useAuth() {
     }
 
     initAuth()
-  }, [])
+  }, [user, isAuthenticated])
 
-  // Auto-refresh token periodically (10 minutes)
+  // Auto-refresh token - FIXED VERSION
   useEffect(() => {
     if (!isAuthenticated) return
 
     const interval = setInterval(() => {
-      autoRefreshToken().catch((err) => console.error('Auto refresh failed:', err))
-    }, 10 * 60 * 1000)
+      autoRefreshToken().catch((err) => {
+        console.error('Auto refresh failed:', err)
+        // Don't logout on refresh failure - token might still be valid
+      })
+    }, 10 * 60 * 1000) // 10 minutes
 
     return () => clearInterval(interval)
   }, [isAuthenticated])
@@ -95,33 +105,4 @@ export function useAuth() {
     isAdmin: user?.role === 'admin',
     isCustomer: user?.role === 'customer',
   }
-}
-
-// Hook to require auth
-export function useRequireAuth() {
-  const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuth()
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace(`/login?redirectedFrom=${window.location.pathname}`)
-    }
-  }, [isAuthenticated, isLoading, router])
-
-  return { isAuthenticated, isLoading }
-}
-
-// Hook to require admin
-export function useRequireAdmin() {
-  const router = useRouter()
-  const { user, isLoading } = useAuth()
-
-  useEffect(() => {
-    if (!isLoading && user?.role !== 'admin') {
-      showErrorToast('شما به این بخش دسترسی ندارید')
-      router.replace('/')
-    }
-  }, [user, isLoading, router])
-
-  return { isAdmin: user?.role === 'admin', isLoading }
 }

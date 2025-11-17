@@ -32,28 +32,27 @@ export default function ProfileForm() {
   })
 
   const updateProfile = useMutation({
-    mutationFn: (data: ProfileFormData) =>
-      updateProfileApi(user!.id, {
-        full_name: data.fullName,
-        email: data.email || null,
-        profile_completed: true,
-      }),
-    onSuccess: (data) => {
-      // Update store
-      setUser({
-        ...user!,
-        fullName: data.full_name,
-        email: data.email,
-        profileCompleted: true,
-      })
+  mutationFn: (data: ProfileFormData) =>
+    updateProfileApi(user!.id, {  // userId not needed now, API gets it from token
+      full_name: data.fullName,
+      email: data.email || null,
+      profile_completed: true,
+    }),
+  onSuccess: (data) => {
+    setUser({
+      ...user!,
+      fullName: data.full_name,
+      email: data.email,
+      profileCompleted: true,
+    })
 
-      showSuccessToast('پروفایل با موفقیت به‌روزرسانی شد')
-      router.push('/')
-    },
-    onError: (error: Error) => {
-      showErrorToast(error)
-    },
-  })
+    showSuccessToast('پروفایل با موفقیت به‌روزرسانی شد')
+    router.push('/')
+  },
+  onError: (error: Error) => {
+    showErrorToast(error)
+  },
+})
 
   const onSubmit = (data: ProfileFormData) => {
     updateProfile.mutate(data)

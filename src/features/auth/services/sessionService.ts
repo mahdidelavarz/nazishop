@@ -76,11 +76,31 @@ export function clearSession() {
 }
 
 export async function autoRefreshToken(): Promise<void> {
-  const session = await getSession()
-  
-  if (!session.isAuthenticated) {
-    // Try to refresh if we have refresh token
-    await refreshSession()
+  try {
+    const session = await getSession()
+    
+    // Only try to refresh if we're actually authenticated
+    if (!session.isAuthenticated) {
+      console.log('Not authenticated, skipping auto-refresh')
+      return
+    }
+
+    // Check if access token is expiring soon (within 5 minutes)
+    if (session.accessTokenExpiry) {
+      const now = Date.now()
+      const fiveMinutes = 5 * 60 * 1000
+      const timeUntilExpiry = session.accessTokenExpiry - now
+
+      if (timeUntilExpiry < fiveMinutes && timeUntilExpiry > 0) {
+        console.log('Token expiring soon, refreshing...')
+        await refreshSession()
+      } else {
+        console.log('Token still valid, no refresh needed')
+      }
+    }
+  } catch (error) {
+    console.error('Auto refresh error:', error)
+    // Don't throw - just log and continue
   }
 }
 

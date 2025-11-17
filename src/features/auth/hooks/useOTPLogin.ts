@@ -58,8 +58,9 @@ export function useVerifyOTP() {
         fullName: null,
         role: data.role,
         profileCompleted: data.profileCompleted,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        address: null,
+        postalCode: null,
+        birthday: null,
       })
 
       // Store userId in localStorage

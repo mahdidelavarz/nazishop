@@ -40,6 +40,7 @@ export async function setRefreshTokenCookie(token: string) {
 
 export async function getAccessTokenFromCookie(): Promise<string | undefined> {
   const cookieStore = await cookies()
+  console.log(cookieStore.get(COOKIE_CONFIG.ACCESS_TOKEN))
   return cookieStore.get(COOKIE_CONFIG.ACCESS_TOKEN)?.value
 }
 
