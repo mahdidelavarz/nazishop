@@ -35,6 +35,8 @@ export interface BaseJWTPayload {
   
   /** Expiration timestamp (seconds since epoch) */
   exp: number
+
+  type?: TokenType
 }
 
 /**
