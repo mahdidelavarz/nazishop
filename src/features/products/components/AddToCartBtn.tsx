@@ -2,7 +2,7 @@
 
 import { useAddToCart } from "@/features/cart/hooks/useCart";
 import { useLocalCartStore } from "@/features/cart/store/localCartStore";
-import { useAuthStore } from "@/features/auth/store/authStore";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useState } from "react";
 import { Product } from "../types/productsType";
 import { Icon } from "@iconify/react";

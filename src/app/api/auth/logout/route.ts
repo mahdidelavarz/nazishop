@@ -1,62 +1,40 @@
 // app/api/auth/logout/route.ts
 
-import { NextRequest } from 'next/server'
-import crypto from 'crypto'
-import { supabaseAdmin } from '@/shared/lib/supabase/server'
-import { getRefreshTokenFromCookie, clearAuthCookies } from '@/shared/utils/cookies'
-import { successResponse, errorResponse } from '@/shared/utils/response'
-import { logError } from '@/shared/utils/errors'
+import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
+import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Hash token for comparison
- */
-function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex')
-}
 
-/**
- * POST /api/auth/logout
- * Logout user and revoke refresh token
- */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Get refresh token from cookie
-    const refreshToken = await getRefreshTokenFromCookie()
+    const accessToken = req.cookies.get('accessToken')?.value;
 
-    if (refreshToken) {
-      // Hash token for database lookup
-      const tokenHash = hashToken(refreshToken)
+    if (accessToken) {
+      const payload = verifyAccessToken(accessToken);
 
-      // Revoke refresh token in database
-      const { error } = await supabaseAdmin
-        .from('refresh_tokens')
-        .update({ revoked: true , updated_at: new Date().toISOString() })
-        .eq('token_hash', tokenHash)
-
-      if (error) {
-        logError(error, 'logout - revoke token')
-        // Continue with logout even if revocation fails
+      if (payload) {
+        // Revoke all refresh tokens for this user
+        await supabaseAdmin
+          .from('refresh_tokens')
+          .update({ revoked: true })
+          .eq('user_id', payload.userId);
       }
     }
 
-    // Clear auth cookies
-    clearAuthCookies()
+    // Clear access token cookie
+    const response = NextResponse.json({
+      success: true,
+      message: 'خروج موفقیت‌آمیز',
+    });
 
-    // Return success response
-    return successResponse(
-      { loggedOut: true },
-      'خروج با موفقیت انجام شد'
-    )
-  } catch (error: any) {
-    logError(error, 'logout')
+    response.cookies.delete('accessToken');
 
-    // Even on error, clear cookies and return success
-    // Better UX than showing error on logout
-    clearAuthCookies()
-    
-    return successResponse(
-      { loggedOut: true },
-      'خروج با موفقیت انجام شد'
-    )
+    return response;
+  } catch (error) {
+    console.error('Logout Error:', error);
+    return NextResponse.json(
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
+    );
   }
 }

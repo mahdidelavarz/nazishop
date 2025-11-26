@@ -1,108 +1,75 @@
-// src/features/auth/hooks/useAuth.ts
-import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { useMutation } from '@tanstack/react-query'
-import { useAuthStore } from '../store/authStore'
-import { getCurrentUserApi, logoutApi } from '../services/authServices'
-import { showSuccessToast, showErrorToast } from '@/shared/utils/errors'
-import { clearSession, autoRefreshToken } from '../services/sessionService'
+// hooks/useAuth.ts
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '../store/auth.store';
+import { apiClient } from '@/shared/lib/api-client';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { User } from '../types/auth.type';
+
+/**
+ * Custom hook for authentication operations
+ */
 export function useAuth() {
-  const router = useRouter()
-  const { user, isAuthenticated, isLoading, setUser, clearUser, setLoading } = useAuthStore()
-  const hasInitialized = useRef(false)
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user, setUser, setRefreshToken, logout: clearAuth } = useAuthStore();
 
-  // Initialize auth state
-  useEffect(() => {
-    if (hasInitialized.current) return
-    hasInitialized.current = true
+  // Fetch current user
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const response = await apiClient.get<{ success: boolean; user: User }>(
+        '/auth/me'
+      );
+      return response.data.user;
+    },
+    enabled: false, // Manual fetch
+    retry: 1, // Retry once on failure
+    retryDelay: 1000,
+  });
 
-    const initAuth = async () => {
-      if (user && isAuthenticated) {
-        console.log('User already authenticated, skipping session check')
-        setLoading(false)
-        return
+  // Initialize user on mount
+  const initializeUser = async () => {
+    try {
+      const result = await refetch();
+      if (result.data) {
+        setUser(result.data);
+      } else if (result.error) {
+        // If fetch fails, clear auth state
+        console.log('Failed to fetch user, clearing auth state');
+        clearAuth();
       }
-
-      setLoading(true)
-      try {
-        const res = await fetch('/api/auth/session', {
-          credentials: 'include',
-          cache: 'no-store',
-        })
-
-        const session = await res.json()
-
-        if (session?.isAuthenticated && session.user) {
-          try {
-            const userData = await getCurrentUserApi(session.user.id)
-            setUser({
-              id: userData.id,
-              phoneNumber: userData.phone_number,
-              email: userData.email,
-              fullName: userData.full_name,
-              role: userData.role,
-              profileCompleted: userData.profile_completed,
-              address: "",
-              postalCode: "",
-              birthday: ""
-            })
-          } catch (err) {
-            console.error('Failed to fetch full user data', err)
-            clearUser()
-          }
-        } else {
-          clearUser()
-        }
-      } catch (err) {
-        console.error('Auth initialization error:', err)
-        clearUser()
-      } finally {
-        setLoading(false)
-      }
+    } catch (error) {
+      console.log('Error initializing user:', error);
+      clearAuth();
     }
-
-    initAuth()
-  }, [user, isAuthenticated])
-
-  // Auto-refresh token - FIXED VERSION
-  useEffect(() => {
-    if (!isAuthenticated) return
-
-    const interval = setInterval(() => {
-      autoRefreshToken().catch((err) => {
-        console.error('Auto refresh failed:', err)
-        // Don't logout on refresh failure - token might still be valid
-      })
-    }, 10 * 60 * 1000) // 10 minutes
-
-    return () => clearInterval(interval)
-  }, [isAuthenticated])
+  };
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: logoutApi,
+    mutationFn: async () => {
+      await axios.post('/api/auth/logout', {}, { withCredentials: true });
+    },
     onSuccess: () => {
-      clearSession()
-      useAuthStore.getState().logout()
-      showSuccessToast('خروج با موفقیت انجام شد')
-      router.push('/login')
+      clearAuth();
+      queryClient.clear();
+      toast.success('خروج موفقیت‌آمیز');
+      router.push('/login');
     },
-    onError: (err: Error) => {
-      clearSession()
-      useAuthStore.getState().logout()
-      showErrorToast(err, 'خطا در خروج')
-      router.push('/login')
+    onError: () => {
+      toast.error('خطا در خروج');
     },
-  })
+  });
 
   return {
     user,
-    isAuthenticated,
     isLoading,
-    logout: logoutMutation.mutate,
-    isLoggingOut: logoutMutation.isPending,
-    isAdmin: user?.role === 'admin',
-    isCustomer: user?.role === 'customer',
-  }
+    isAuthenticated: !!user,
+    initializeUser,
+    logout: () => logoutMutation.mutate(),
+    setUser,
+    setRefreshToken,
+  };
 }

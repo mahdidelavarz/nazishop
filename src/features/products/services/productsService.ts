@@ -1,5 +1,6 @@
 
-import { supabase } from "@/shared/lib/supabase/client";
+
+import { supabase } from "@/shared/lib/supabase/supabase";
 import { Product } from "../types/productsType";
 
 

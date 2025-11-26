@@ -1,169 +1,163 @@
 // app/api/auth/verify-otp/route.ts
 
-import { NextRequest } from 'next/server'
-import crypto from 'crypto'
-import { supabaseAdmin } from '@/shared/lib/supabase/server'
-import { generateTokenPair } from '@/shared/lib/jwt/sign'
-import { setAuthTokens } from '@/shared/utils/cookies'
-import { successResponse, errorResponse } from '@/shared/utils/response'
-import {
-  createValidationError,
-  createOTPInvalidError,
-  createOTPExpiredError,
-  createOTPMaxAttemptsError,
-  createServerError,
-  logError,
-  ErrorCode,
-} from '@/shared/utils/errors'
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { generateAccessToken, generateRefreshToken } from '@/shared/lib/jwt/jwt';
 
-const MAX_ATTEMPTS = 3
+const MAX_ATTEMPTS = 1;
 
-/**
- * Hash refresh token for storage
- */
-function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex')
-}
-
-/**
- * POST /api/auth/verify-otp
- * Verify OTP code and create user session
- */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Parse request body
-    const body = await request.json()
-    const { phoneNumber, otpCode } = body
+    const { phone_number, otp_code } = await req.json();
 
-    // Validate inputs
-    if (!phoneNumber || !otpCode) {
-      throw createValidationError('شماره موبایل و کد تایید الزامی است')
+    if (!phone_number || !otp_code) {
+      return NextResponse.json(
+        { success: false, message: 'شماره تلفن و کد تایید الزامی است' },
+        { status: 400 }
+      );
     }
 
-    // Find valid OTP
-    const now = new Date().toISOString()
+    // Find the latest unverified OTP
     const { data: otpRecord, error: otpError } = await supabaseAdmin
       .from('otp_codes')
       .select('*')
-      .eq('phone_number', phoneNumber)
-      .eq('otp_code', otpCode)
+      .eq('phone_number', phone_number)
       .eq('verified', false)
-      .gt('expires_at', now)
-      .single()
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
     if (otpError || !otpRecord) {
-      // Increment attempts for any matching unverified OTP
-      const { data: unverifiedOtps } = await supabaseAdmin
-        .from('otp_codes')
-        .select('id, attempts')
-        .eq('phone_number', phoneNumber)
-        .eq('verified', false)
-        .gt('expires_at', now)
-
-      if (unverifiedOtps && unverifiedOtps.length > 0) {
-        for (const otp of unverifiedOtps) {
-          await supabaseAdmin
-            .from('otp_codes')
-            .update({ attempts: otp.attempts + 1 })
-            .eq('id', otp.id)
-        }
-      }
-
-      throw createOTPInvalidError('کد تایید نامعتبر یا منقضی شده است')
+      return NextResponse.json(
+        { success: false, message: 'کد تایید یافت نشد' },
+        { status: 404 }
+      );
     }
 
-    // Check attempts limit
+    // Check if OTP is expired
+    if (new Date(otpRecord.expires_at) > new Date(Date.now())) {
+      return NextResponse.json(
+        { success: false, message: 'کد تایید منقضی شده است' },
+        { status: 400 }
+      );
+    }
+
+    // Check attempts
     if (otpRecord.attempts >= MAX_ATTEMPTS) {
-      throw createOTPMaxAttemptsError(
-        'تعداد تلاش‌ها بیش از حد مجاز است. لطفا کد جدید درخواست کنید'
-      )
+      return NextResponse.json(
+        { success: false, message: 'تعداد تلاش‌های مجاز به پایان رسید' },
+        { status: 429 }
+      );
+    }
+
+    // Verify OTP
+    if (otpRecord.otp_code !== otp_code) {
+      // Increment attempts
+      await supabaseAdmin
+        .from('otp_codes')
+        .update({ attempts: otpRecord.attempts + 1 })
+        .eq('id', otpRecord.id);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: `کد تایید اشتباه است. ${
+            MAX_ATTEMPTS - otpRecord.attempts - 1
+          } تلاش باقی مانده`,
+        },
+        { status: 400 }
+      );
     }
 
     // Mark OTP as verified
     await supabaseAdmin
       .from('otp_codes')
       .update({ verified: true })
-      .eq('id', otpRecord.id)
+      .eq('id', otpRecord.id);
 
     // Check if user exists
-    const { data: existingUser } = await supabaseAdmin
+    let { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, profile_completed, role')
-      .eq('phone_number', phoneNumber)
-      .single()
+      .select('*')
+      .eq('phone_number', phone_number)
+      .single();
 
-    let userId: string
-    let isNewUser = false
-    let profileCompleted = false
-    let userRole: 'customer' | 'admin' = 'customer'
-
-    if (existingUser) {
-      // Existing user
-      userId = existingUser.id
-      profileCompleted = existingUser.profile_completed ?? false
-      userRole = existingUser.role
-    } else {
-      // Create new user
-      userId = crypto.randomUUID()
-      isNewUser = true
-
-      const { error: insertError } = await supabaseAdmin
+    // Create new user if not exists
+    if (userError || !user) {
+      const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
         .insert({
-          id: userId,
-          phone_number: phoneNumber,
+          phone_number,
           role: 'customer',
           profile_completed: false,
-          created_at: now,
         })
+        .select()
+        .single();
 
-      if (insertError) {
-        logError(insertError, 'verify-otp - user creation')
-        throw createServerError('خطا در ثبت اطلاعات کاربری')
+      if (createError || !newUser) {
+        return NextResponse.json(
+          { success: false, message: 'خطا در ایجاد کاربر' },
+          { status: 500 }
+        );
       }
+
+      user = newUser;
     }
 
-    // Generate JWT tokens
-    const tokens = await generateTokenPair({
-      userId,
-      email: null,
-      phoneNumber,
-      role: userRole,
-    })
+    // Generate tokens
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      phone_number: user.phone_number,
+      role: user.role,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      phone_number: user.phone_number,
+      role: user.role,
+    });
 
     // Hash and store refresh token
-    const refreshTokenHash = hashToken(tokens.refreshToken)
-    const refreshExpiresAt = new Date(tokens.refreshTokenExpiry)
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     await supabaseAdmin.from('refresh_tokens').insert({
-      user_id: userId,
-      token_hash: refreshTokenHash,
-      expires_at: refreshExpiresAt.toISOString(),
-      revoked: false,
-      created_at: now,
-    })
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: expiresAt.toISOString(),
+    });
 
-    // Set cookies
-    setAuthTokens(tokens.accessToken, tokens.refreshToken)
+    // Log login
+    await supabaseAdmin.from('loginlog').insert({
+      user_id: user.id,
+      ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+      user_agent: req.headers.get('user-agent') || 'unknown',
+    });
 
-    // Return success response
-    return successResponse(
-      {
-        userId,
-        phoneNumber,
-        isNewUser,
-        profileCompleted,
-        role: userRole,
-      },
-      isNewUser ? 'حساب کاربری با موفقیت ایجاد شد' : 'ورود موفقیت‌آمیز'
-    )
-  } catch (error: any) {
-    logError(error, 'verify-otp')
+    // Set access token as httpOnly cookie
+    const response = NextResponse.json({
+      success: true,
+      message: 'ورود موفقیت‌آمیز',
+      user,
+      refreshToken,
+      requiresProfileCompletion: user.profile_completed,
+    });
 
-    if (error.name === 'AppError') {
-     return errorResponse(error.message, error.statusCode, error.code);
-    }
+    response.cookies.set('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60, // 15 minutes
+      path: '/',
+    });
 
-    return errorResponse('خطای سرور در تایید کد', 500)
+    return response;
+  } catch (error) {
+    console.error('Verify OTP Error:', error);
+    return NextResponse.json(
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
+    );
   }
 }

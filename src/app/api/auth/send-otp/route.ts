@@ -1,143 +1,82 @@
-// Example: src/app/api/auth/send-otp/route.ts
-// app/api/auth/send-otp/route.ts
 
-import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { sendOTPSMS } from "@/shared/lib/kavenegar/client";
-import {
-  successResponse,
-  errorResponse,
-  rateLimitError,
-} from "@/shared/utils/response";
-import {
-  createValidationError,
-  createRateLimitError,
-  createServerError,
-  logError,
-  ErrorCode,
-} from "@/shared/utils/errors";
+import { generateOTP, sendOTPSMS } from '@/shared/lib/kavenegar/kavenegar';
+import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Constants
-const IRANIAN_PHONE_REGEX = /^09[0-9]{9}$/;
-const OTP_EXPIRY_MINUTES = 2;
-const MAX_OTP_REQUESTS_PER_HOUR = 3;
-
-/**
- * Convert 09123456789 to 989123456789 (add country code for Kavenegar)
- */
-function toKavenegarFormat(phone: string): string {
-  if (phone.startsWith("0")) {
-    return "98" + phone.slice(1);
-  }
-  return phone;
-}
-
-/**
- * Check rate limiting for OTP requests
- */
-async function checkRateLimit(phoneNumber: string): Promise<boolean> {
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
-  const { data, error } = await supabaseAdmin
-    .from("otp_codes")
-    .select("id")
-    .eq("phone_number", phoneNumber)
-    .gte("created_at", oneHourAgo.toISOString());
-
-  if (error) {
-    logError(error, "checkRateLimit");
-    return true; // Allow request if check fails
-  }
-
-  return (data?.length || 0) < MAX_OTP_REQUESTS_PER_HOUR;
-}
-
-/**
- * POST /api/auth/send-otp
- * Send OTP code to phone number via SMS
- */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Parse request body
-    const body = await request.json();
-    const { phoneNumber } = body;
+    const { phone_number } = await req.json();
 
-    // Validate phone number
-    if (!phoneNumber || typeof phoneNumber !== "string") {
-      throw createValidationError("شماره موبایل الزامی است");
-    }
-
-    if (!IRANIAN_PHONE_REGEX.test(phoneNumber)) {
-      throw createValidationError("فرمت شماره موبایل باید 09XXXXXXXXX باشد", {
-        code: ErrorCode.INVALID_PHONE,
-      });
-    }
-
-    // Check rate limiting
-    const isAllowed = await checkRateLimit(phoneNumber);
-    if (!isAllowed) {
-      throw createRateLimitError(
-        `حداکثر ${MAX_OTP_REQUESTS_PER_HOUR} درخواست در ساعت مجاز است`
+    // Validate phone number format (Iranian format: 09xxxxxxxxx)
+    if (!phone_number || !/^09[0-9]{9}$/.test(phone_number)) {
+      return NextResponse.json(
+        { success: false, message: 'شماره تلفن نامعتبر است' },
+        { status: 400 }
       );
     }
 
-    // Generate 6-digit OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    // Check for recent OTP (rate limiting - 1 OTP per minute)
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
+    const { data: recentOTP } = await supabaseAdmin
+      .from('otp_codes')
+      .select('*')
+      .eq('phone_number', phone_number)
+      .gte('created_at', oneMinuteAgo)
+      .single();
 
-    // Delete expired and old OTPs for this phone number
-    await supabaseAdmin
-      .from("otp_codes")
-      .delete()
-      .eq("phone_number", phoneNumber);
-
-    // Store new OTP in database
-    const { error: dbError } = await supabaseAdmin.from("otp_codes").insert({
-      phone_number: phoneNumber,
-      otp_code: otpCode,
-      expires_at: expiresAt.toISOString(),
-      verified: false,
-      attempts: 0,
-    });
-
-    if (dbError) {
-      logError(dbError, "send-otp - database insert");
-      throw createServerError("خطا در ذخیره کد تایید");
+    if (recentOTP) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'لطفا یک دقیقه صبر کنید و دوباره تلاش کنید',
+        },
+        { status: 429 }
+      );
     }
 
-    // Send SMS via Kavenegar
+    // Generate OTP
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+    console.log('expiresAt',expiresAt.toISOString());
+
+    // Save OTP to database
+    const { error: otpError } = await supabaseAdmin
+      .from('otp_codes')
+      .insert({
+        phone_number,
+        otp_code: otpCode,
+        expires_at: expiresAt.toISOString(),
+        verified: false,
+        attempts: 0,
+        created_at : new Date(Date.now()).toISOString()
+      });
+
+    if (otpError) {
+      console.error('OTP Save Error:', otpError);
+      return NextResponse.json(
+        { success: false, message: 'خطا در ذخیره کد تایید' },
+        { status: 500 }
+      );
+    }
+
+    // Send OTP via SMS (ignore errors in development)
     try {
-      const kavenegarPhone = toKavenegarFormat(phoneNumber);
-      await sendOTPSMS(kavenegarPhone, otpCode);
-
-      console.log("✅ OTP sent successfully to:", phoneNumber);
-    } catch (smsError: any) {
-      logError(smsError, "send-otp - SMS sending");
-
-      // In development, continue without SMS error
-      if (process.env.NODE_ENV !== "development") {
-        throw createServerError("خطا در ارسال پیامک");
-      }
+      await sendOTPSMS(phone_number, otpCode);
+    } catch (error) {
+      console.log('SMS send failed (ignored for testing):', error);
     }
 
-    // Return success response
-    return successResponse(
-      {
-        expiresIn: OTP_EXPIRY_MINUTES * 60,
-        // Only in development mode
-        ...(process.env.NODE_ENV === "development" && {
-          debug: { otpCode },
-        }),
-      },
-      "کد تایید ارسال شد"
+    // Return OTP code in response for testing purposes
+    return NextResponse.json({
+      success: true,
+      message: 'کد تایید با موفقیت ارسال شد',
+      otpCode: otpCode, // FOR TESTING ONLY - Remove in production
+    });
+  } catch (error) {
+    console.error('Send OTP Error:', error);
+    return NextResponse.json(
+      { success: false, message: 'خطای سرور' },
+      { status: 500 }
     );
-  } catch (error: any) {
-    logError(error, "send-otp");
-
-    if (error.name === "AppError") {
-      return errorResponse(error.message, error.statusCode, error.code);
-    }
-
-    return errorResponse("خطا در ارسال کد تایید", 500);
   }
 }

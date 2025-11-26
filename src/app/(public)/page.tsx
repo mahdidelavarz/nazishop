@@ -3,14 +3,15 @@
 
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export default function HomePage() {
-  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const {user : userStored} = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
-  console.log(user)
+  console.log(userStored , 'safffffffffffffffffffff')
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -94,11 +95,11 @@ export default function HomePage() {
                 <div className="hidden md:flex items-center gap-3 bg-gradient-to-r from-pink-50 to-purple-50 px-4 py-2 rounded-xl border border-pink-200">
                   <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-bold">
-                      {user?.fullName?.charAt(0) || "ک"}
+                      {user?.full_name?.charAt(0) || "ک"}
                     </span>
                   </div>
                   <span className="text-sm font-medium text-gray-700">
-                    {user?.fullName || user?.phoneNumber || "کاربر"}
+                    {user?.full_name || user?.phone_number || "کاربر"}
                   </span>
                 </div>
 
@@ -115,7 +116,7 @@ export default function HomePage() {
 
                 <button
                   onClick={() => logout()}
-                  disabled={isLoggingOut}
+                  disabled={false}
                   className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 disabled:opacity-50"
                 >
                   <Icon icon="ph:sign-out-duotone" width={24} />
@@ -141,11 +142,11 @@ export default function HomePage() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Text Content */}
           <div className="space-y-8">
-            {isAuthenticated && user?.fullName && (
+            {isAuthenticated && user?.full_name && (
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-100 to-purple-100 px-6 py-3 rounded-full animate-bounce">
                 <Icon icon="ph:hand-waving-duotone" className="text-2xl" />
                 <span className="font-medium text-gray-800">
-                  سلام {user.fullName} عزیز! 👋
+                  سلام {user.full_name} عزیز! 👋
                 </span>
               </div>
             )}

@@ -4,7 +4,7 @@ import {
   PhoneValidationResult,
   EmailValidationResult,
   OTPValidationResult,
-} from '../types/authType'
+} from '../types/auth.type'
 
 /**
  * Iranian Phone Number Regex

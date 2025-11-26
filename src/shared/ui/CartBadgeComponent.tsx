@@ -3,7 +3,7 @@
 
 import { useCartQuery } from "@/features/cart/hooks/useCart";
 import { useLocalCartStore } from "@/features/cart/store/localCartStore";
-import { useAuthStore } from "@/features/auth/store/authStore";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 

@@ -1,10 +1,13 @@
-import "./globals.css";
-// import CartSyncProvider from "@/features/cart/components/CartSyncProvider";
-
-import QueryProvider from "@/shared/providers/QueryProviders";
-import { Toaster } from "react-hot-toast";
+// @ts-ignore: side-effect import of CSS without type declaration
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
 import localFont from "next/font/local";
-import AuthProvider from "@/shared/providers/AuthProvider";
+import { Providers } from '@/shared/providers/providers';
+import Header from '@/shared/layouts/Header';
+
+const inter = Inter({ subsets: ['latin'] });
 
 const vazir = localFont({
   src: [
@@ -18,9 +21,11 @@ const vazir = localFont({
   display: "swap",
 });
 
-export const metadata = {
-  title: "My App",
+export const metadata: Metadata = {
+  title: 'JWT Authentication System',
+  description: 'Next.js JWT Authentication with OTP',
 };
+
 export default function RootLayout({
   children,
 }: {
@@ -28,13 +33,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fa" dir="rtl" className={vazir.variable}>
-      <body>
-        <QueryProvider>
-          <Toaster position="top-center" />
-          {/* <CartSyncProvider> */}
-            <AuthProvider>{children}</AuthProvider>
-          {/* </CartSyncProvider> */}
-        </QueryProvider>
+      <body className={inter.className}>
+        <Providers>
+          <Header />
+          <main>{children}</main>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+            }}
+          />
+        </Providers>
       </body>
     </html>
   );

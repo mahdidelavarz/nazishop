@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useAuthStore } from "@/features/auth/store/authStore";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useLocalCartStore } from "../store/localCartStore";
 import { syncGuestCart } from "../services/cartServices";
 import { useQueryClient } from "@tanstack/react-query";

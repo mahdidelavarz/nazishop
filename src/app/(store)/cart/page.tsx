@@ -1,7 +1,7 @@
 "use client";
 
 import { useCartQuery, useRemoveCartItem, useUpdateCartItem } from "@/features/cart/hooks/useCart";
-import { useAuthStore } from "@/features/auth/store/authStore";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

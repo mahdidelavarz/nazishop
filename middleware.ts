@@ -1,86 +1,61 @@
-// middleware.ts (in project root, not in app/)
+// middleware.ts
 
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from '@/shared/lib/jwt/verify'
+import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const PROTECTED_ROUTES = ['/profile', '/orders', '/checkout', '/dashboard']
-const ADMIN_ROUTES = ['/admin']
-const PUBLIC_ROUTES = ['/', '/login', '/callback', '/products']
 
-function matchesRoute(path: string, routes: string[]): boolean {
-  return routes.some(route => {
-    if (route.endsWith('*')) {
-      return path.startsWith(route.slice(0, -1))
-    }
-    return path === route || path.startsWith(route + '/')
-  })
-}
+export function middleware(request: NextRequest) {
+  const accessToken = request.cookies.get('accessToken')?.value;
+  const { pathname } = request.nextUrl;
 
-export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname
+  // Protected routes
+  const protectedRoutes = ['/profile'];
 
-  // Skip middleware for static files and API routes
-  if (
-    path.startsWith('/_next') ||
-    path.startsWith('/api') ||
-    path.includes('.')
-  ) {
-    return NextResponse.next()
-  }
+  // Check if the route is protected
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
-  // Get access token from cookie
-  const accessToken = request.cookies.get('access_token')?.value
-
-  const isProtectedRoute = matchesRoute(path, PROTECTED_ROUTES)
-  const isAdminRoute = matchesRoute(path, ADMIN_ROUTES)
-  const isPublicRoute = matchesRoute(path, PUBLIC_ROUTES)
-
-  // Public routes - allow
-  if (isPublicRoute && !isProtectedRoute && !isAdminRoute) {
-    return NextResponse.next()
-  }
-
-  // No token - redirect to login
-  if (!accessToken) {
-    if (isProtectedRoute || isAdminRoute) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('redirectedFrom', path)
-      return NextResponse.redirect(loginUrl)
-    }
-    return NextResponse.next()
-  }
-
-  // Verify token
-  try {
-    const payload = await verifyAccessToken(accessToken)
-
-    // Admin route - check role
-    if (isAdminRoute && payload.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', request.url))
+  if (isProtectedRoute) {
+    // No token - redirect to login
+    if (!accessToken) {
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
     }
 
-    return NextResponse.next()
-  } catch (error) {
-    console.error('Middleware auth error:', error)
-
-    if (isProtectedRoute || isAdminRoute) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('redirectedFrom', path)
-      
-      const response = NextResponse.redirect(loginUrl)
-      response.cookies.delete('access_token')
-      response.cookies.delete('refresh_token')
-      
-      return response
+    // Try to verify token, but don't fail if verification fails
+    // Let the page handle token refresh through the API
+    try {
+      const payload = verifyAccessToken(accessToken);
+      if (!payload) {
+        // Token invalid but let the page handle refresh
+        console.log('Token verification failed in middleware, letting page handle it');
+      }
+    } catch (error) {
+      // Token verification error, let the page handle it
+      console.log('Token verification error in middleware:', error);
     }
-
-    const response = NextResponse.next()
-    response.cookies.delete('access_token')
-    response.cookies.delete('refresh_token')
-    return response
   }
+
+  // Redirect authenticated users away from login page
+  if (pathname === '/login' && accessToken) {
+    try {
+      const payload = verifyAccessToken(accessToken);
+      if (payload) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+    } catch (error) {
+      // Invalid token, allow access to login page
+      const response = NextResponse.next();
+      response.cookies.delete('accessToken');
+      return response;
+    }
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*|api).*)'],
-}
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+};

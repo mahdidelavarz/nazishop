@@ -1,5 +1,6 @@
 
-import { supabase } from "@/shared/lib/supabase/client";
+
+import { supabase } from "@/shared/lib/supabase/supabase";
 import { CartItem, CartItemPayload, CartItemRow } from "../types/cartTypes";
 
 export async function addToCartApi({ productId, quantity }: CartItemPayload) {
