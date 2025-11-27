@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
+import { useGoogleLogin } from "../hooks/useGoogleLogin";
 
 interface OTPFormProps {
   onSuccess: (phoneNumber: string) => void;
@@ -12,6 +13,8 @@ interface OTPFormProps {
 
 export default function OTPForm({ onSuccess }: OTPFormProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
+
+  const googleLogin = useGoogleLogin();
 
   const sendOTPMutation = useMutation({
     mutationFn: async (phone: string) => {
@@ -44,6 +47,10 @@ export default function OTPForm({ onSuccess }: OTPFormProps) {
       toast.error(message);
     },
   });
+
+  const handleGoogleLogin = () => {
+    googleLogin.mutate();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +105,29 @@ export default function OTPForm({ onSuccess }: OTPFormProps) {
           <>
             <Icon icon="mdi:send" width={20} />
             ارسال کد تایید
+          </>
+        )}
+      </button>
+      {/* Google OAuth */}
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        disabled={googleLogin.isPending}
+        className="w-full border border-gray-300 hover:bg-gray-50 py-3 rounded-lg flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {googleLogin.isPending ? (
+          <>
+            <Icon
+              icon="eos-icons:loading"
+              className="animate-spin"
+              width={20}
+            />
+            در حال انتقال...
+          </>
+        ) : (
+          <>
+            <Icon icon="flat-color-icons:google" width={20} />
+            <span className="font-medium">ورود با گوگل</span>
           </>
         )}
       </button>

@@ -2,12 +2,24 @@
 
 import { useMutation } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
-import { loginWithGoogleApi } from '../services/authServices'
-import { showErrorToast } from '@/shared/utils/errors'
+import { supabase } from '@/shared/lib/supabase/client'
+import toast from 'react-hot-toast'
 
-/**
- * Hook for Google OAuth login
- */
+
+export async function loginWithGoogleApi(redirectTo?: string) {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/callback${redirectTo ? `?redirectedFrom=${encodeURIComponent(redirectTo)}` : ''
+        }`,
+    },
+  })
+
+  if (error) {
+    throw new Error(error.message || 'خطا در ورود با گوگل')
+  }
+}
+
 export function useGoogleLogin() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams?.get('redirectedFrom') || '/'
@@ -15,7 +27,7 @@ export function useGoogleLogin() {
   return useMutation({
     mutationFn: () => loginWithGoogleApi(redirectTo),
     onError: (error: Error) => {
-      showErrorToast(error, 'خطا در ورود با گوگل')
+      toast.error(`${error.message} خطا در ورود با گوگل  ,`);
     },
   })
 }
