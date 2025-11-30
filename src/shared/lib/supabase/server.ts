@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { Database, TablesInsert, TablesUpdate } from './database.types'
+import { Database } from './database.types'
 
 
 /**
