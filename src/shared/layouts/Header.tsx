@@ -6,6 +6,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -39,7 +40,8 @@ export default function Header() {
               <p className="text-xs text-gray-500">زیبایی در هر لحظه</p>
             </div>
           </Link>
-
+          {/* Theme Toggle */}
+          <ThemeToggle />
           {/* Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
             <Link

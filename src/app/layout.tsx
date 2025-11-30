@@ -1,11 +1,11 @@
-// @ts-ignore: side-effect import of CSS without type declaration
+// @ts-ignore
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import localFont from "next/font/local";
 import { Providers } from '@/shared/providers/providers';
-import Header from '@/shared/layouts/Header';
+import LayoutWrapper from '@/shared/layouts/LayoutWrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,25 +26,19 @@ export const metadata: Metadata = {
   description: 'Next.js JWT Authentication with OTP',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" className={vazir.variable}>
       <body className={inter.className}>
         <Providers>
-          <Header />
-          <main>{children}</main>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
           <Toaster
             position="top-center"
             toastOptions={{
               duration: 3000,
-              style: {
-                background: '#333',
-                color: '#fff',
-              },
+              style: { background: '#333', color: '#fff' },
             }}
           />
         </Providers>

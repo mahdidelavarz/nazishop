@@ -22,7 +22,7 @@ export default function HomePage() {
   return (
     <div
       dir="rtl"
-      className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50"
+      className="min-h-screen bg-background"
     >
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20">

@@ -238,7 +238,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
 
           {/* Products Grid/List */}
           <div className="flex-1">
-            {filteredProducts.length === 0 ? (
+            {products.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl">
                 <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Icon icon="ph:package-duotone" className="text-gray-400" width={64} />
