@@ -7,8 +7,6 @@ import localFont from "next/font/local";
 import { Providers } from '@/shared/providers/providers';
 import LayoutWrapper from '@/shared/layouts/LayoutWrapper';
 
-const inter = Inter({ subsets: ['latin'] });
-
 const vazir = localFont({
   src: [
     {
@@ -29,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" className={vazir.variable}>
-      <body className={inter.className}>
+      <body>
         <Providers>
           <LayoutWrapper>
             {children}
