@@ -15,22 +15,22 @@ export default function CartPage() {
   const { mutate: updateQuantity, isPending: updating } = useUpdateCartItem();
 
   // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login?redirectedFrom=/cart");
-    }
-  }, [isLoading, isAuthenticated, router]);
+  // useEffect(() => {
+  //   if (!isLoading && !isAuthenticated) {
+  //     router.push("/login?redirectedFrom=/cart");
+  //   }
+  // }, [isLoading, isAuthenticated, router]);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-purple-50">
-        <div className="text-center">
-          <Icon icon="eos-icons:loading" className="text-pink-500 mx-auto mb-4" width={48} />
-          <p className="text-gray-600">در حال بررسی احراز هویت...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (!isAuthenticated) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-purple-50">
+  //       <div className="text-center">
+  //         <Icon icon="eos-icons:loading" className="text-pink-500 mx-auto mb-4" width={48} />
+  //         <p className="text-gray-600">در حال بررسی احراز هویت...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (isLoading) {
     return (

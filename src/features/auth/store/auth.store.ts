@@ -40,6 +40,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         refreshToken: state.refreshToken, // Only persist refreshToken
         user: state.user,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

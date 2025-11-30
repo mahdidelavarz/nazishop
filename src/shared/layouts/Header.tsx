@@ -7,10 +7,13 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "../ui/ThemeToggle";
+import { useCartQuery } from "@/features/cart/hooks/useCart";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const { data: cartItems } = useCartQuery();
+  const totalItems = cartItems?.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -83,7 +86,7 @@ export default function Header() {
                   className="text-gray-700"
                 />
                 <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  3
+                {totalItems}
                 </span>
               </Link>
 

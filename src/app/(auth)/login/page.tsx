@@ -11,9 +11,11 @@ import VerifyOTPForm from "@/features/auth/components/VerifyOTPForm";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated , user } = useAuthStore();
   const [step, setStep] = useState<"phone" | "verify">("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
+
+  console.log(isAuthenticated , user);
 
   // Redirect if already authenticated
   useEffect(() => {

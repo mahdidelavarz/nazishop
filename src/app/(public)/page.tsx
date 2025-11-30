@@ -5,19 +5,9 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export default function HomePage() {
-  const { user, isAuthenticated, logout } = useAuth();
-  const {user : userStored} = useAuthStore();
-  const [scrolled, setScrolled] = useState(false);
-  console.log(userStored , 'safffffffffffffffffffff')
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <div
