@@ -1,15 +1,14 @@
 // components/auth/VerifyOTPForm.tsx
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-import { Icon } from '@iconify/react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../store/auth.store';
-
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "../store/auth.store";
 
 interface VerifyOTPFormProps {
   phoneNumber: string;
@@ -22,7 +21,7 @@ export default function VerifyOTPForm({
 }: VerifyOTPFormProps) {
   const router = useRouter();
   const { setUser, setRefreshToken } = useAuthStore();
-  const [otpCode, setOtpCode] = useState('');
+  const [otpCode, setOtpCode] = useState("");
   const [timer, setTimer] = useState(120); // 2 minutes
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export default function VerifyOTPForm({
 
   const verifyOTPMutation = useMutation({
     mutationFn: async (code: string) => {
-      const response = await axios.post('/api/auth/verify-otp', {
+      const response = await axios.post("/api/auth/verify-otp", {
         phone_number: phoneNumber,
         otp_code: code,
       });
@@ -49,10 +48,14 @@ export default function VerifyOTPForm({
 
       // Always redirect to profile page after login
       // Profile page will handle showing completion form or profile details
-      router.push('/profile');
+      if (!data.user.profile_completed) {
+        router.push("/profile");
+      } else {
+        router.push("/");
+      }
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'کد تایید اشتباه است';
+      const message = error.response?.data?.message || "کد تایید اشتباه است";
       toast.error(message);
     },
   });
@@ -61,7 +64,7 @@ export default function VerifyOTPForm({
     e.preventDefault();
 
     if (otpCode.length !== 4) {
-      toast.error('کد تایید باید 4 رقم باشد');
+      toast.error("کد تایید باید 4 رقم باشد");
       return;
     }
 
@@ -71,14 +74,14 @@ export default function VerifyOTPForm({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="text-center mb-6">
         <p className="text-sm text-gray-600">
-          کد تایید به شماره <span className="font-bold">{phoneNumber}</span>{' '}
+          کد تایید به شماره <span className="font-bold">{phoneNumber}</span>{" "}
           ارسال شد
         </p>
         <button
@@ -102,7 +105,7 @@ export default function VerifyOTPForm({
           type="text"
           inputMode="numeric"
           value={otpCode}
-          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
           placeholder="____"
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-center text-2xl tracking-widest"
           disabled={verifyOTPMutation.isPending}
