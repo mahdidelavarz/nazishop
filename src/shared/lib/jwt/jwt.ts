@@ -19,7 +19,6 @@ const REFRESH_SECRET = getSecret('JWT_REFRESH_SECRET');
 const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
-console.log('✅ JWT secrets loaded successfully');
 
 /**
  * Generate Access Token (short-lived, stored in httpOnly cookie)

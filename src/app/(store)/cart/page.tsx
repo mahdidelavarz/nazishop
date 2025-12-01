@@ -92,7 +92,7 @@ export default function CartPage() {
     0
   );
 
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cartItems.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">

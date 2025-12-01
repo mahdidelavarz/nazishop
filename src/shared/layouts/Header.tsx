@@ -11,9 +11,10 @@ import { useCartQuery } from "@/features/cart/hooks/useCart";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  console.log(user)
   const [scrolled, setScrolled] = useState(false);
   const { data: cartItems } = useCartQuery();
-  const totalItems = cartItems?.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cartItems?.length;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);

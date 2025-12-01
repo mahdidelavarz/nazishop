@@ -15,8 +15,6 @@ export default function LoginPage() {
   const [step, setStep] = useState<"phone" | "verify">("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  console.log(isAuthenticated , user);
-
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {

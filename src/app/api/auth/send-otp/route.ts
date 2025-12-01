@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     // Generate OTP
     const otpCode = generateOTP();
     const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
-    console.log('expiresAt',expiresAt.toISOString());
+
 
     // Save OTP to database
     const { error: otpError } = await supabaseAdmin

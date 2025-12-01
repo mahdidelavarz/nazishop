@@ -1,16 +1,16 @@
 
 import { supabase } from "@/shared/lib/supabase/client";
 import { CartItem, CartItemPayload, CartItemRow } from "../types/cartTypes";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export async function addToCartApi({ productId, quantity }: CartItemPayload) {
   // Try to get user ID from Supabase session first
-  const { data: { session } } = await supabase.auth.getSession();
-  let userId = session?.user?.id;
+  // const { data: { session } } = await supabase.auth.getSession();
+  // let userId = session?.user?.id;
+  const {user} = useAuthStore();
+  const userId = user?.id;
 
   // If no Supabase session, get from custom auth cookie
-  if (!userId) {
-    userId = getUserIdFromCookie();
-  }
 
   if (!userId) {
     throw new Error("لطفا وارد شوید");
@@ -85,35 +85,29 @@ export async function addToCartApi({ productId, quantity }: CartItemPayload) {
 }
 
 // Helper to get user ID from cookie
-function getUserIdFromCookie(): string | undefined {
-  if (typeof window === 'undefined') return undefined;
+// function getUserIdFromCookie(): string | undefined {
+//   if (typeof window === 'undefined') return undefined;
 
-  try {
-    const cookies = document.cookie.split(';');
-    const sessionCookie = cookies.find(c => c.trim().startsWith('session_token='));
+//   try {
+//     const cookies = document.cookie.split(';');
+//     const sessionCookie = cookies.find(c => c.trim().startsWith('session_token='));
 
-    if (!sessionCookie) return undefined;
+//     if (!sessionCookie) return undefined;
 
-    const token = sessionCookie.split('=')[1];
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const session = JSON.parse(decoded);
+//     const token = sessionCookie.split('=')[1];
+//     const decoded = Buffer.from(token, 'base64').toString('utf-8');
+//     const session = JSON.parse(decoded);
 
-    return session.userId || undefined;
-  } catch {
-    return undefined;
-  }
-}
+//     return session.userId || undefined;
+//   } catch {
+//     return undefined;
+//   }
+// }
 
 export async function fetchCartItems(): Promise<CartItem[]> {
-  // Try to get user ID from Supabase session first
-  const { data: { session } } = await supabase.auth.getSession();
-  let userId = session?.user?.id;
-
-  // If no Supabase session, get from custom auth cookie
-  if (!userId) {
-    userId = getUserIdFromCookie();
-  }
-
+   const {user} = useAuthStore();
+  const userId = user?.id;
+  
   if (!userId) {
     return [];
   }
