@@ -47,9 +47,10 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
     let filtered = [...products];
 
     // Filter by price range
-    filtered = filtered.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
-    );
+    filtered = filtered.filter((p) => {
+      const price = p.price ?? 0;
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
 
     // Filter by brands
     if (selectedBrands.length > 0) {

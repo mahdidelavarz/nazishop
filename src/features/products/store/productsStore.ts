@@ -32,7 +32,7 @@ const initialState: Omit<
 > = {
   sortBy: "newest",
   viewMode: "grid",
-  priceRange: [0, 1_000_000],
+  priceRange: [0, 1_000_000_000],
   selectedBrands: [],
   showInStock: false,
   showWithDiscount: false,
