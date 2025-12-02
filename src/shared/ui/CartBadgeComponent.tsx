@@ -1,7 +1,7 @@
 // shared/components/CartBadge.tsx
 "use client";
 
-import { useCartQuery } from "@/features/cart/hooks/useCart";
+import { useCartSummary } from "@/features/cart/hooks/useCart";
 import { useLocalCartStore } from "@/features/cart/store/localCartStore";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { Icon } from "@iconify/react";
@@ -9,12 +9,12 @@ import Link from "next/link";
 
 export default function CartBadge() {
   const { isAuthenticated } = useAuthStore();
-  const { data: cartItems } = useCartQuery();
+  const { data: cartSummary } = useCartSummary();
   const guestItems = useLocalCartStore((state) => state.items);
 
   // Get total count from appropriate source
   const totalCount = isAuthenticated
-    ? cartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0
+    ? cartSummary?.totalCount ?? 0
     : guestItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (

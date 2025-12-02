@@ -56,6 +56,29 @@ export const useCartQuery = () => {
 };
 
 // ------------------------
+// Cart summary (lightweight)
+// ------------------------
+export const useCartSummary = () => {
+  const { isAuthenticated, user } = useAuthStore();
+
+  return useQuery<{ totalCount: number }>({
+    queryKey: ["cart-summary", user?.id],
+    enabled: isAuthenticated && !!user?.id,
+    queryFn: async () => {
+      if (!user?.id) {
+        return { totalCount: 0 };
+      }
+
+      const response = await apiClient.get<{ success: boolean; totalCount: number }>(
+        "/cart/summary"
+      );
+      return { totalCount: response.data.totalCount || 0 };
+    },
+    staleTime: 60 * 1000,
+  });
+};
+
+// ------------------------
 // Add to cart
 // ------------------------
 export const useAddToCart = () => {

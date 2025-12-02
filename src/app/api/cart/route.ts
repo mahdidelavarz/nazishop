@@ -83,11 +83,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: product, error: productError } = await supabaseAdmin
-      .from('products')
-      .select('id, stock')
-      .eq('id', productId)
-      .single();
+    const [productResult, existingResult] = await Promise.all([
+      supabaseAdmin
+        .from('products')
+        .select('id, stock')
+        .eq('id', productId)
+        .single(),
+      supabaseAdmin
+        .from('cart_items')
+        .select('id, quantity')
+        .eq('product_id', productId)
+        .eq('user_id', payload.userId)
+        .maybeSingle(),
+    ]);
+
+    const { data: product, error: productError } = productResult;
 
     if (productError || !product) {
       return NextResponse.json(
@@ -103,12 +113,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existing, error: existingError } = await supabaseAdmin
-      .from('cart_items')
-      .select('id, quantity')
-      .eq('product_id', productId)
-      .eq('user_id', payload.userId)
-      .maybeSingle();
+    const { data: existing, error: existingError } = existingResult;
 
     if (existingError) {
       console.error('Check cart error:', existingError);

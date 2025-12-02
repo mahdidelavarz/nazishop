@@ -7,13 +7,13 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "../ui/ThemeToggle";
-import { useCartQuery } from "@/features/cart/hooks/useCart";
+import { useCartSummary } from "@/features/cart/hooks/useCart";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const { data: cartItems } = useCartQuery();
-  const totalItems = cartItems?.length;
+  const { data: cartSummary } = useCartSummary();
+  const totalItems = cartSummary?.totalCount ?? 0;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
