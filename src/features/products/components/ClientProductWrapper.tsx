@@ -1,13 +1,15 @@
 // app/products/ProductsClient.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Product } from "@/features/products/types/productsType";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
-
-type SortOption = "newest" | "price-asc" | "price-desc" | "discount";
-type ViewMode = "grid" | "list";
+import {
+  SortOption,
+  ViewMode,
+  useProductsStore,
+} from "@/features/products/store/productsStore";
 
 interface ProductsClientProps {
   initialProducts: Product[];
@@ -15,17 +17,28 @@ interface ProductsClientProps {
 
 export default function ProductsClient({ initialProducts }: ProductsClientProps) {
   const [products] = useState<Product[]>(initialProducts);
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  const {
+    sortBy,
+    viewMode,
+    priceRange,
+    selectedBrands,
+    showInStock,
+    showWithDiscount,
+    setSortBy,
+    setViewMode,
+    setPriceRange,
+    toggleBrand,
+    setShowInStock,
+    setShowWithDiscount,
+    clearFilters,
+  } = useProductsStore();
+
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [showInStock, setShowInStock] = useState(false);
-  const [showWithDiscount, setShowWithDiscount] = useState(false);
 
   // Get unique brands
   const brands = useMemo(() => {
-    const brandSet = new Set(products.map(p => p.brand).filter(Boolean));
+    const brandSet = new Set(products.map((p) => p.brand).filter(Boolean));
     return Array.from(brandSet) as string[];
   }, [products]);
 
@@ -35,23 +48,25 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
 
     // Filter by price range
     filtered = filtered.filter(
-      p => p.price >= priceRange[0] && p.price <= priceRange[1]
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
     );
 
     // Filter by brands
     if (selectedBrands.length > 0) {
-      filtered = filtered.filter(p => p.brand && selectedBrands.includes(p.brand));
+      filtered = filtered.filter(
+        (p) => p.brand && selectedBrands.includes(p.brand)
+      );
     }
 
     // Filter by stock
     if (showInStock) {
-      filtered = filtered.filter(p => p.stock > 0);
+      filtered = filtered.filter((p) => p.stock > 0);
     }
 
     // Filter by discount
     if (showWithDiscount) {
       filtered = filtered.filter(
-        p => p.original_price && p.original_price > p.price
+        (p) => p.original_price && p.original_price > p.price
       );
     }
 
@@ -79,20 +94,14 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
     }
 
     return filtered;
-  }, [products, priceRange, selectedBrands, showInStock, showWithDiscount, sortBy]);
-
-  const toggleBrand = (brand: string) => {
-    setSelectedBrands(prev =>
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-    );
-  };
-
-  const clearFilters = () => {
-    setPriceRange([0, 1000000]);
-    setSelectedBrands([]);
-    setShowInStock(false);
-    setShowWithDiscount(false);
-  };
+  }, [
+    products,
+    priceRange,
+    selectedBrands,
+    showInStock,
+    showWithDiscount,
+    sortBy,
+  ]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">

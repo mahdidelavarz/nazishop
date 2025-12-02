@@ -1,7 +1,7 @@
 // app/products/[slug]/page.tsx
 import AddToCartButton from "@/features/products/components/AddToCartBtn";
-import { fetchSingleProductApi } from "@/features/products/services/productsService";
 import { Product } from "@/features/products/types/productsType";
+import { supabaseAdmin } from "@/shared/lib/supabase/supabase";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
@@ -9,7 +9,14 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product: Product = await fetchSingleProductApi(slug);
+  const { data } = await supabaseAdmin
+    .from("products")
+    .select(
+      "id, title, description, price, original_price, brand, stock, thumbnail_url, slug"
+    )
+    .eq("slug", slug)
+    .single();
+  const product = data as Product;
   return {
     title: `${product.title} | فروشگاه آرایشی`,
     description: product.description || "خرید بهترین محصولات آرایشی",
@@ -23,7 +30,30 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function SingleProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product: Product = await fetchSingleProductApi(slug);
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .select(
+      `
+      id,
+      title,
+      description,
+      price,
+      original_price,
+      brand,
+      stock,
+      thumbnail_url,
+      slug,
+      details:product_details(description, specifications, images)
+    `
+    )
+    .eq("slug", slug)
+    .single();
+
+  if (error || !data) {
+    throw new Error("محصول یافت نشد");
+  }
+
+  const product = data as Product;
   
   const discount =
     product.original_price && product.original_price > product.price
