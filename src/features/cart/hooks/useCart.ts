@@ -2,17 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { 
-  addToCartApi, 
-  fetchCartItems, 
-  removeCartItem, 
-  updateCartItemQuantity,
-  syncGuestCart 
-} from "../services/cartServices";
+import { syncGuestCart } from "../services/cartServices";
 import { CartItem, CartItemPayload } from "../types/cartTypes";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useLocalCartStore } from "../store/localCartStore";
 import { useEffect } from "react";
+import { apiClient } from "@/shared/lib/api-client";
 
 // ------------------------
 // Sync guest cart on login
@@ -45,12 +40,17 @@ export const useSyncGuestCart = () => {
 // Fetch cart items
 // ------------------------
 export const useCartQuery = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   
   return useQuery<CartItem[]>({
-    queryKey: ["cart"],
-    queryFn: fetchCartItems,
-    enabled: isAuthenticated,
+    queryKey: ["cart", user?.id],
+    enabled: isAuthenticated && !!user?.id,
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const response = await apiClient.get<{ success: boolean; items: CartItem[] }>("/cart");
+      return response.data.items || [];
+    },
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -60,9 +60,16 @@ export const useCartQuery = () => {
 // ------------------------
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   
   return useMutation({
-    mutationFn: (payload: CartItemPayload) => addToCartApi(payload),
+    mutationFn: async ({ productId, quantity }: CartItemPayload) => {
+      if (!user?.id) {
+        throw new Error("لطفا وارد شوید");
+      }
+
+      await apiClient.post("/cart", { productId, quantity });
+    },
     onSuccess: () => {
       toast.success("محصول به سبد خرید اضافه شد");
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -80,8 +87,13 @@ export const useUpdateCartItem = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ cartItemId, quantity }: { cartItemId: string; quantity: number }) =>
-      updateCartItemQuantity(cartItemId, quantity),
+    mutationFn: async ({ cartItemId, quantity }: { cartItemId: string; quantity: number }) => {
+      if (quantity < 1) {
+        throw new Error("تعداد باید حداقل ۱ باشد");
+      }
+
+      await apiClient.patch(`/cart/${cartItemId}`, { quantity });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
@@ -98,7 +110,9 @@ export const useRemoveCartItem = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (cartItemId: string) => removeCartItem(cartItemId),
+    mutationFn: async (cartItemId: string) => {
+      await apiClient.delete(`/cart/${cartItemId}`);
+    },
     onSuccess: () => {
       toast.success("محصول از سبد حذف شد");
       queryClient.invalidateQueries({ queryKey: ["cart"] });

@@ -1,8 +1,7 @@
 // app/api/cart/sync/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionFromRequest } from '@/features/auth/utils/sessionUtils'
 import { supabaseAdmin } from '@/shared/lib/supabase/supabase'
-
+import { verifyAccessToken } from '@/shared/lib/jwt/jwt'
 
 interface GuestCartItem {
   product_id: string
@@ -11,15 +10,26 @@ interface GuestCartItem {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify session
-    const session = getSessionFromRequest(request)
-    
-    if (!session) {
+    // Verify user using JWT access token (httpOnly cookie)
+    const accessToken = request.cookies.get('accessToken')?.value
+
+    if (!accessToken) {
       return NextResponse.json(
         { error: 'غیرمجاز - لطفا وارد شوید' },
         { status: 401 }
       )
     }
+
+    const payload = verifyAccessToken(accessToken)
+
+    if (!payload || !payload.userId) {
+      return NextResponse.json(
+        { error: 'نشست نامعتبر است، لطفا دوباره وارد شوید' },
+        { status: 401 }
+      )
+    }
+
+    const userId = payload.userId
 
     const { items } = await request.json() as { items: GuestCartItem[] }
 
@@ -44,17 +54,17 @@ export async function POST(request: NextRequest) {
           .single()
 
         if (productError || !product) {
-          errors.push({ 
-            productId: item.product_id, 
-            message: 'محصول یافت نشد' 
+          errors.push({
+            productId: item.product_id,
+            message: 'محصول یافت نشد'
           })
           continue
         }
 
         if (product.stock < item.quantity) {
-          errors.push({ 
-            productId: item.product_id, 
-            message: 'موجودی کافی نیست' 
+          errors.push({
+            productId: item.product_id,
+            message: 'موجودی کافی نیست'
           })
           continue
         }
@@ -64,14 +74,14 @@ export async function POST(request: NextRequest) {
           .from('cart_items')
           .select('id, quantity')
           .eq('product_id', item.product_id)
-          .eq('user_id', session.userId)
+          .eq('user_id', userId)
           .maybeSingle()
 
         if (checkError) {
           console.error('Check cart error:', checkError)
-          errors.push({ 
-            productId: item.product_id, 
-            message: 'خطا در بررسی سبد خرید' 
+          errors.push({
+            productId: item.product_id,
+            message: 'خطا در بررسی سبد خرید'
           })
           continue
         }
@@ -88,9 +98,9 @@ export async function POST(request: NextRequest) {
 
           if (updateError) {
             console.error('Update error:', updateError)
-            errors.push({ 
-              productId: item.product_id, 
-              message: 'خطا در بروزرسانی' 
+            errors.push({
+              productId: item.product_id,
+              message: 'خطا در بروزرسانی'
             })
             continue
           }
@@ -99,16 +109,16 @@ export async function POST(request: NextRequest) {
           const { error: insertError } = await supabaseAdmin
             .from('cart_items')
             .insert({
-              user_id: session.userId,
+              user_id: userId,
               product_id: item.product_id,
               quantity: Math.min(item.quantity, product.stock)
             })
 
           if (insertError) {
             console.error('Insert error:', insertError)
-            errors.push({ 
-              productId: item.product_id, 
-              message: 'خطا در افزودن به سبد' 
+            errors.push({
+              productId: item.product_id,
+              message: 'خطا در افزودن به سبد'
             })
             continue
           }
@@ -117,9 +127,9 @@ export async function POST(request: NextRequest) {
         synced.push(item.product_id)
       } catch (error: any) {
         console.error(`Error processing item ${item.product_id}:`, error)
-        errors.push({ 
-          productId: item.product_id, 
-          message: error.message || 'خطای ناشناخته' 
+        errors.push({
+          productId: item.product_id,
+          message: error.message || 'خطای ناشناخته'
         })
       }
     }
@@ -127,10 +137,10 @@ export async function POST(request: NextRequest) {
     // Return results
     if (synced.length === 0 && errors.length > 0) {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'همگام‌سازی ناموفق بود',
-          errors 
+          errors
         },
         { status: 500 }
       )

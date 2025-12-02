@@ -1,0 +1,151 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
+import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const payload = verifyAccessToken(accessToken);
+
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    const { quantity } = await request.json();
+
+    if (!quantity || quantity < 1) {
+      return NextResponse.json(
+        { success: false, message: 'تعداد نامعتبر است' },
+        { status: 400 }
+      );
+    }
+
+    const { data: cartItem, error: fetchError } = await supabaseAdmin
+      .from('cart_items')
+      .select('id, user_id')
+      .eq('id', params.id)
+      .maybeSingle();
+
+    if (fetchError || !cartItem) {
+      return NextResponse.json(
+        { success: false, message: 'محصول در سبد خرید یافت نشد' },
+        { status: 404 }
+      );
+    }
+
+    if (cartItem.user_id !== payload.userId) {
+      return NextResponse.json(
+        { success: false, message: 'دسترسی غیرمجاز' },
+        { status: 403 }
+      );
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('cart_items')
+      .update({ quantity })
+      .eq('id', params.id);
+
+    if (updateError) {
+      console.error('Update cart error:', updateError);
+      return NextResponse.json(
+        { success: false, message: 'خطا در بروزرسانی سبد خرید' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'سبد خرید به‌روزرسانی شد',
+    });
+  } catch (error) {
+    console.error('Cart PATCH error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const payload = verifyAccessToken(accessToken);
+
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    const { data: cartItem, error: fetchError } = await supabaseAdmin
+      .from('cart_items')
+      .select('id, user_id')
+      .eq('id', params.id)
+      .maybeSingle();
+
+    if (fetchError || !cartItem) {
+      return NextResponse.json(
+        { success: false, message: 'محصول در سبد خرید یافت نشد' },
+        { status: 404 }
+      );
+    }
+
+    if (cartItem.user_id !== payload.userId) {
+      return NextResponse.json(
+        { success: false, message: 'دسترسی غیرمجاز' },
+        { status: 403 }
+      );
+    }
+
+    const { error: deleteError } = await supabaseAdmin
+      .from('cart_items')
+      .delete()
+      .eq('id', params.id);
+
+    if (deleteError) {
+      console.error('Delete cart error:', deleteError);
+      return NextResponse.json(
+        { success: false, message: 'خطا در حذف محصول' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'محصول از سبد خرید حذف شد',
+    });
+  } catch (error) {
+    console.error('Cart DELETE error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error' },
+      { status: 500 }
+    );
+  }
+}
+

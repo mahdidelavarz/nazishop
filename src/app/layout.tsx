@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import localFont from "next/font/local";
 import { Providers } from '@/shared/providers/providers';
 import LayoutWrapper from '@/shared/layouts/LayoutWrapper';
+import CartSyncProvider from '@/features/cart/components/CartSyncProvider';
 
 const vazir = localFont({
   src: [
@@ -29,9 +30,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fa" dir="rtl" className={vazir.variable}>
       <body>
         <Providers>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
+          <CartSyncProvider>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+          </CartSyncProvider>
           <Toaster
             position="top-center"
             toastOptions={{
