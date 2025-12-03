@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# Cache
+.turbo/
+.cache/
+
+# Testing
+coverage/
+
+# Misc
+.DS_Store
+*.log
+*.log.*
+
+# Environment
+.env
+.env*.local
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Public assets (images, fonts, etc.)
+public/fonts/
+public/*.jpg
+public/*.png
+public/*.svg

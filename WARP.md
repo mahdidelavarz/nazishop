@@ -105,8 +105,33 @@ Future code you write should follow these existing patterns where appropriate (f
 - With `jsdom` as the environment and dev dependencies on `@testing-library/react` and `@testing-library/jest-dom`, React component tests should use React Testing Library and its matchers.
 - When adding new tests, ensure they follow the existing directory and naming conventions so they are picked up by Vitest.
 
+## Performance optimizations
+
+### Image optimization
+- All product images use Next.js `<Image>` component with automatic WebP/AVIF conversion
+- Responsive images with proper `sizes` attributes for different viewports
+- Lazy loading enabled for off-screen images (except priority images)
+
+### Authentication
+- Auth is initialized once at root level via `AuthInitProvider`
+- Avoid calling `useAuth()` multiple times in the same component tree
+- Auth state is shared via Zustand store across the app
+
+### Caching strategy
+- React Query: 5-minute stale time, 10-minute garbage collection
+- Products page uses ISR with 60-second revalidation
+- Cart summary has 1-minute stale time for quick updates
+
+### Bundle optimization
+- Font loading: Vazir font with `display: swap` and preload enabled
+- No unused font families loaded
+- SWC minification enabled
+- Compression enabled in Next.js config
+
 ## Additional notes for Warp
 
 - Prefer using the existing TypeScript path alias `@/*` when generating imports instead of long relative paths.
+- When adding new images, always use `next/image` with appropriate `sizes` prop.
 - When modifying or adding route protection logic, make sure it stays consistent with the behavior encapsulated in `middleware.ts` (protected routes, login redirect, and token handling).
 - When adding new tests, place them under `src/` with `.test.ts`/`.test.tsx` suffixes so they are automatically discovered by Vitest.
+- Never add artificial delays (like `setTimeout`) in data fetching or sync operations - use proper React Query state management instead.

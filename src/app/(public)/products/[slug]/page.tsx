@@ -4,6 +4,7 @@ import { Product } from "@/features/products/types/productsType";
 import { supabaseAdmin } from "@/shared/lib/supabase/supabase";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import Image from "next/image";
 
 export const revalidate = 60;
 
@@ -103,10 +104,13 @@ export default async function SingleProductPage({ params }: { params: Promise<{ 
               {/* Main Image */}
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
                 {product.thumbnail_url ? (
-                  <img
+                  <Image
                     src={product.thumbnail_url.startsWith('/') ? product.thumbnail_url : `/${product.thumbnail_url}`}
                     alt={product.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover"
+                    priority
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -122,12 +126,14 @@ export default async function SingleProductPage({ params }: { params: Promise<{ 
                 {product.details[0].images.map((img, i) => (
                   <div
                     key={i}
-                    className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-pointer transition"
+                    className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-pointer transition"
                   >
-                    <img
+                    <Image
                       src={img}
                       alt={`تصویر ${i + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="80px"
+                      className="object-cover"
                     />
                   </div>
                 ))}

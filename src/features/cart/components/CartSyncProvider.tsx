@@ -21,9 +21,6 @@ export default function CartSyncProvider({ children }: { children: React.ReactNo
       if (isAuthenticated && guestItems.length > 0 && !hasSynced.current) {
         hasSynced.current = true;
         
-        // Wait a bit more for auth state to fully settle
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         try {
           await toast.promise(
             syncGuestCart(guestItems),

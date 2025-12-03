@@ -4,6 +4,7 @@
 import { useMemo, useState } from "react";
 import { Product } from "@/features/products/types/productsType";
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "@iconify/react";
 import {
   SortOption,
@@ -289,16 +290,18 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                         href={`/products/${product.slug}`}
                         className="flex gap-4 bg-white rounded-xl p-4 hover:shadow-lg transition group"
                       >
-                        <div className="w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                        <div className="w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 relative">
                           {product.thumbnail_url ? (
-                            <img
+                            <Image
                               src={
                                 product.thumbnail_url.startsWith("/")
                                   ? product.thumbnail_url
                                   : `/${product.thumbnail_url}`
                               }
                               alt={product.title}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="128px"
+                              className="object-cover"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -365,14 +368,17 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                         }`}
                       >
                         {product.thumbnail_url ? (
-                          <img
+                          <Image
                             src={
                               product.thumbnail_url.startsWith("/")
                                 ? product.thumbnail_url
                                 : `/${product.thumbnail_url}`
                             }
                             alt={product.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                            priority={false}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
