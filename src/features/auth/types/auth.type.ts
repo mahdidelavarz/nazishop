@@ -3,6 +3,7 @@
 export interface User {
   id: string;
   phone_number: string;
+  email: string | null;
   full_name: string | null;
   address: string | null;
   postal_code: string | null;
@@ -32,6 +33,8 @@ export interface OTPVerifyRequest {
 }
 
 export interface CompleteProfileRequest {
+  email?: string;
+  phone_number?: string;
   full_name: string;
   address: string;
   postal_code?: string;

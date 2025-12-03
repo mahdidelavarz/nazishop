@@ -1,10 +1,10 @@
-// app/api/profile/complete/route.ts
+// app/api/profile/update/route.ts
 
 import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
 import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export async function PATCH(req: NextRequest) {
   try {
     const accessToken = req.cookies.get('accessToken')?.value;
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, phone_number, full_name, address, postal_code, birthday } = await req.json();
+    const { email, full_name, address, postal_code, birthday } = await req.json();
 
     // Validate required fields
     if (!full_name || !address) {
@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
       address,
       postal_code: postal_code || null,
       birthday: birthday || null,
-      profile_completed: true,
       updated_at: new Date().toISOString(),
     };
 
@@ -62,9 +61,6 @@ export async function POST(req: NextRequest) {
     if (email) {
       updateData.email = email;
     }
-
-    // Don't update phone_number as it's used for authentication
-    // phone_number is set during OTP verification and shouldn't be changed
 
     const { data: user, error } = await supabaseAdmin
       .from('users')
@@ -82,14 +78,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'پروفایل با موفقیت تکمیل شد',
+      message: 'پروفایل با موفقیت به‌روزرسانی شد',
       user,
     });
   } catch (error) {
-    console.error('Complete Profile Error:', error);
+    console.error('Update Profile Error:', error);
     return NextResponse.json(
       { success: false, message: 'خطای سرور' },
       { status: 500 }
     );
   }
 }
+

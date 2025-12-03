@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "@iconify/react";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import OTPForm from "@/features/auth/components/OTPForm";
 import VerifyOTPForm from "@/features/auth/components/VerifyOTPForm";

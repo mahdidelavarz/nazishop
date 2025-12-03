@@ -3,17 +3,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../store/auth.store";
+import InputComponent from "@/shared/ui/InputComponent";
+import ButtonComponent from "@/shared/ui/ButtonComponent";
 
 interface VerifyOTPFormProps {
   phoneNumber: string;
   onBack: () => void;
 }
+
+const otpSchema = z.object({
+  otp_code: z
+    .string()
+    .length(4, "کد تایید باید 4 رقم باشد")
+    .regex(/^\d{4}$/, "کد تایید باید فقط شامل اعداد باشد"),
+});
+
+type OTPFormData = z.infer<typeof otpSchema>;
 
 export default function VerifyOTPForm({
   phoneNumber,
@@ -21,8 +35,16 @@ export default function VerifyOTPForm({
 }: VerifyOTPFormProps) {
   const router = useRouter();
   const { setUser, setRefreshToken } = useAuthStore();
-  const [otpCode, setOtpCode] = useState("");
   const [timer, setTimer] = useState(120); // 2 minutes
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<OTPFormData>({
+    resolver: zodResolver(otpSchema),
+  });
 
   useEffect(() => {
     if (timer > 0) {
@@ -60,15 +82,8 @@ export default function VerifyOTPForm({
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (otpCode.length !== 4) {
-      toast.error("کد تایید باید 4 رقم باشد");
-      return;
-    }
-
-    verifyOTPMutation.mutate(otpCode);
+  const onSubmit = (data: OTPFormData) => {
+    verifyOTPMutation.mutate(data.otp_code);
   };
 
   const formatTime = (seconds: number) => {
@@ -78,73 +93,63 @@ export default function VerifyOTPForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="text-center mb-6">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-neutral-600">
           کد تایید به شماره <span className="font-bold">{phoneNumber}</span>{" "}
           ارسال شد
         </p>
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-blue-600 hover:underline mt-2"
+          className="text-sm text-primary-500 hover:underline mt-2"
         >
           تغییر شماره
         </button>
       </div>
 
-      <div>
-        <label
-          htmlFor="otp"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          کد تایید
-        </label>
-        <input
-          id="otp"
-          type="text"
-          inputMode="numeric"
-          value={otpCode}
-          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-          placeholder="____"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-center text-2xl tracking-widest"
-          disabled={verifyOTPMutation.isPending}
-          maxLength={4}
-          autoFocus
-        />
-      </div>
+      <InputComponent
+        id="otp"
+        name="otp_code"
+        type="text"
+        label="کد تایید"
+        placeholder="____"
+        register={register("otp_code", {
+          onChange: (e) => {
+            e.target.value = e.target.value.replace(/\D/g, "");
+          },
+        })}
+        error={errors.otp_code}
+        disabled={verifyOTPMutation.isPending}
+        inputStyle="text-center text-2xl tracking-widest dir-ltr"
+      />
 
-      <div className="text-center text-sm text-gray-600">
+      <div className="text-center text-sm text-neutral-600">
         {timer > 0 ? (
           <span>زمان باقی‌مانده: {formatTime(timer)}</span>
         ) : (
           <button
             type="button"
             onClick={onBack}
-            className="text-blue-600 hover:underline"
+            className="text-primary-500 hover:underline"
           >
             ارسال مجدد کد
           </button>
         )}
       </div>
 
-      <button
+      <ButtonComponent
         type="submit"
-        disabled={verifyOTPMutation.isPending || otpCode.length !== 4}
-        className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        variant="primary"
+        size="lg"
+        disabled={verifyOTPMutation.isPending}
+        loading={verifyOTPMutation.isPending}
+        icon="mdi:check-circle"
+        iconPosition="right"
+        fullWidth
       >
-        {verifyOTPMutation.isPending ? (
-          <>
-            <Icon icon="mdi:loading" className="animate-spin" width={20} />
-            در حال بررسی...
-          </>
-        ) : (
-          <>
-            <Icon icon="mdi:check-circle" width={20} />
-            تایید و ورود
-          </>
-        )}
-      </button>
+        تایید و ورود
+      </ButtonComponent>
     </form>
   );
 }

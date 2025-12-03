@@ -1,20 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import { useGoogleLogin } from "../hooks/useGoogleLogin";
+import InputComponent from "@/shared/ui/InputComponent";
+import ButtonComponent from "@/shared/ui/ButtonComponent";
 
 interface OTPFormProps {
   onSuccess: (phoneNumber: string) => void;
 }
 
-export default function OTPForm({ onSuccess }: OTPFormProps) {
-  const [phoneNumber, setPhoneNumber] = useState("");
+const phoneSchema = z.object({
+  phone_number: z
+    .string()
+    .min(11, "شماره موبایل باید 11 رقم باشد")
+    .max(11, "شماره موبایل باید 11 رقم باشد")
+    .regex(/^09[0-9]{9}$/, "شماره موبایل نامعتبر است"),
+});
 
+type PhoneFormData = z.infer<typeof phoneSchema>;
+
+export default function OTPForm({ onSuccess }: OTPFormProps) {
   const googleLogin = useGoogleLogin();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<PhoneFormData>({
+    resolver: zodResolver(phoneSchema),
+  });
 
   const sendOTPMutation = useMutation({
     mutationFn: async (phone: string) => {
@@ -25,22 +46,11 @@ export default function OTPForm({ onSuccess }: OTPFormProps) {
     },
     onSuccess: (data) => {
       if (data.otpCode) {
-        toast.success(`کد تایید: ${data.otpCode}`, {
-          duration: 10000,
-          icon: "✨",
-          style: {
-            background: "#1f2937",
-            color: "#fff",
-            fontSize: "16px",
-            fontWeight: "600",
-            padding: "16px",
-            borderRadius: "12px",
-          },
-        });
+        toast.success(`کد تایید: ${data.otpCode}`);
       } else {
         toast.success("کد تایید ارسال شد");
       }
-      onSuccess(phoneNumber);
+      onSuccess(getValues("phone_number"));
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || "خطا در ارسال کد تایید";
@@ -52,15 +62,8 @@ export default function OTPForm({ onSuccess }: OTPFormProps) {
     googleLogin.mutate();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!/^09[0-9]{9}$/.test(phoneNumber)) {
-      toast.error("شماره تلفن نامعتبر است");
-      return;
-    }
-
-    sendOTPMutation.mutate(phoneNumber);
+  const onSubmit = (data: PhoneFormData) => {
+    sendOTPMutation.mutate(data.phone_number);
   };
 
   return (
@@ -84,87 +87,67 @@ export default function OTPForm({ onSuccess }: OTPFormProps) {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Phone Input */}
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              شماره موبایل
-            </label>
-            <div className="relative">
-              <input
-                id="phone"
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="09123456789"
-                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder:text-gray-400"
-                disabled={sendOTPMutation.isPending}
-                maxLength={11}
-                dir="ltr"
-              />
-              <Icon
-                icon="mdi:phone-outline"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
-                width={20}
-              />
-            </div>
+          <div className="relative">
+            <InputComponent
+              id="phone"
+              name="phone_number"
+              type="tel"
+              label="شماره موبایل"
+              placeholder="09123456789"
+              register={register("phone_number")}
+              error={errors.phone_number}
+              disabled={sendOTPMutation.isPending}
+              inputStyle="pr-10 dir-ltr"
+            />
+            <Icon
+              icon="mdi:phone-outline"
+              className="absolute right-4 top-9 text-neutral-400"
+              width={20}
+            />
           </div>
 
           {/* Submit Button */}
-          <button
+          <ButtonComponent
             type="submit"
+            variant="primary"
+            size="lg"
             disabled={sendOTPMutation.isPending}
-            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            loading={sendOTPMutation.isPending}
+            icon="mdi:arrow-left"
+            iconPosition="right"
+            fullWidth
+            className="bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 shadow-lg shadow-primary-500/30"
           >
-            {sendOTPMutation.isPending ? (
-              <>
-                <Icon icon="mdi:loading" className="animate-spin" width={20} />
-                <span>در حال ارسال...</span>
-              </>
-            ) : (
-              <>
-                <Icon icon="mdi:arrow-left" width={20} />
-                <span>ادامه</span>
-              </>
-            )}
-          </button>
+            ادامه
+          </ButtonComponent>
 
           {/* Divider */}
           <div className="relative py-3">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-neutral-200"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 bg-white text-xs text-gray-500">یا</span>
+              <span className="px-3 bg-white text-xs text-neutral-500">یا</span>
             </div>
           </div>
 
           {/* Google Button */}
-          <button
+          <ButtonComponent
             type="button"
+            variant="outline"
+            size="lg"
             onClick={handleGoogleLogin}
             disabled={googleLogin.isPending}
-            className="w-full bg-white border-2 border-gray-200 text-gray-700 py-3.5 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+            loading={googleLogin.isPending}
+            icon="flat-color-icons:google"
+            iconPosition="left"
+            fullWidth
+            className="bg-card border-neutral-200 hover:bg-neutral-50"
           >
-            {googleLogin.isPending ? (
-              <>
-                <Icon
-                  icon="eos-icons:loading"
-                  className="animate-spin"
-                  width={20}
-                />
-                <span>در حال اتصال...</span>
-              </>
-            ) : (
-              <>
-                <Icon icon="flat-color-icons:google" width={20} />
-                <span>ورود با گوگل</span>
-              </>
-            )}
-          </button>
+            ورود با گوگل
+          </ButtonComponent>
         </form>
 
         {/* Footer */}
