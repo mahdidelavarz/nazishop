@@ -6,6 +6,7 @@ import { Product } from "@/features/products/types/productsType";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
+import WishlistHeartButton from "@/features/wishlist/components/WishlistHeartButton";
 import {
   SortOption,
   ViewMode,
@@ -360,6 +361,10 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                             ناموجود
                           </div>
                         )}
+                      </div>
+
+                      <div className="absolute top-2 right-2 z-10">
+                        <WishlistHeartButton productId={product.id} />
                       </div>
 
                       <div

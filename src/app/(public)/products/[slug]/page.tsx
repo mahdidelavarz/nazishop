@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/shared/lib/supabase/supabase";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import Image from "next/image";
+import WishlistHeartButton from "@/features/wishlist/components/WishlistHeartButton";
 
 export const revalidate = 60;
 
@@ -99,6 +100,11 @@ export default async function SingleProductPage({ params }: { params: Promise<{ 
                     ناموجود
                   </div>
                 )}
+              </div>
+
+              {/* Wishlist Button */}
+              <div className="absolute top-4 right-4 z-10">
+                <WishlistHeartButton productId={product.id} />
               </div>
 
               {/* Main Image */}

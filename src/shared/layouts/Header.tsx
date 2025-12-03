@@ -8,12 +8,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { useCartSummary } from "@/features/cart/hooks/useCart";
+import { useWishlistSummary } from "@/features/wishlist/hooks/useWishlist";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const { data: cartSummary } = useCartSummary();
   const totalItems = cartSummary?.totalCount ?? 0;
+  const { data: wishlistSummary } = useWishlistSummary();
+  const wishlistCount = wishlistSummary?.count ?? 0;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -77,6 +80,22 @@ export default function Header() {
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <Link
+                href="/wishlist"
+                className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <Icon
+                  icon="ph:heart-duotone"
+                  width={24}
+                  className="text-accent-500"
+                />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                    {wishlistCount > 9 ? "9+" : wishlistCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link
                 href="/cart"
                 className="relative p-2 hover:bg-gray-100 rounded-lg transition"
               >
@@ -86,7 +105,7 @@ export default function Header() {
                   className="text-gray-700"
                 />
                 <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                {totalItems}
+                  {totalItems}
                 </span>
               </Link>
 

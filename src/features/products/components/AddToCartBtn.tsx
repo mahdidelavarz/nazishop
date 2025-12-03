@@ -8,6 +8,7 @@ import { Product } from "../types/productsType";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import WishlistHeartButton from "@/features/wishlist/components/WishlistHeartButton";
 
 interface AddToCartButtonProps {
   product: Product;
@@ -144,13 +145,11 @@ export default function AddToCartButton({ product, stock }: AddToCartButtonProps
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
-        <button
+        <WishlistHeartButton
+          productId={product.id}
+          withLabel
           disabled={isOutOfStock}
-          className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-pink-500 hover:text-pink-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Icon icon="ph:heart-duotone" width={20} />
-          <span className="text-sm font-medium">علاقه‌مندی</span>
-        </button>
+        />
         
         <button
           className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:text-blue-500 transition"
