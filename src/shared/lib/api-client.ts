@@ -62,7 +62,7 @@ apiClient.interceptors.response.use(
             if (!refreshToken) {
                 isRefreshing = false;
                 logout();
-                if (typeof window !== 'undefined') {
+                if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
                     window.location.href = '/login';
                 }
                 return Promise.reject(error);
@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
                 isRefreshing = false;
                 logout();
                 toast.error('نشست شما منقضی شده است. لطفا دوباره وارد شوید.');
-                if (typeof window !== 'undefined') {
+                if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
                     window.location.href = '/login';
                 }
                 return Promise.reject(refreshError);
