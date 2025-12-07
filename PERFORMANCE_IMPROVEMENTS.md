@@ -347,7 +347,7 @@ Recommendation:
 •  Make useWishlistSummary() call that route instead.
 
 
-
+//! leftover
 2.5. Route params typed as Promise (wishlist API and product page)
 
 •  DELETE /api/wishlist/[productId]:
