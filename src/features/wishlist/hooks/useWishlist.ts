@@ -3,7 +3,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "@/features/auth/store/auth.store";
-import { fetchWishlist, addToWishlistApi, removeFromWishlistApi } from "../services/wishlistService";
+import {
+  fetchWishlist,
+  addToWishlistApi,
+  removeFromWishlistApi,
+  fetchWishlistSummary,
+} from "../services/wishlistService";
 import { WishlistItem } from "../types/wishlistTypes";
 import { useWishlistStore } from "../store/wishlistStore";
 
@@ -12,7 +17,7 @@ import { useWishlistStore } from "../store/wishlistStore";
 // ------------------------
 export const useWishlistQuery = () => {
   const { isAuthenticated, user } = useAuthStore();
-  const setWishlistIds = useWishlistStore((state) => state.setWishlistIds);
+  // const setWishlistIds = useWishlistStore((state) => state.setWishlistIds);
 
   return useQuery<WishlistItem[]>({
     queryKey: ["wishlist", user?.id],
@@ -20,7 +25,7 @@ export const useWishlistQuery = () => {
     queryFn: async () => {
       const response = await fetchWishlist();
       const items = response.items || [];
-      setWishlistIds(items.map((item) => item.product_id));
+      // setWishlistIds(items.map((item) => item.product_id));
       return items;
     },
     staleTime: 5 * 60 * 1000,
@@ -32,16 +37,13 @@ export const useWishlistQuery = () => {
 // ------------------------
 export const useWishlistSummary = () => {
   const { isAuthenticated, user } = useAuthStore();
-  const setWishlistIds = useWishlistStore((state) => state.setWishlistIds);
 
-  return useQuery<{ count: number }>({
+  return useQuery<number>({
     queryKey: ["wishlist-summary", user?.id],
     enabled: isAuthenticated && !!user?.id,
     queryFn: async () => {
-      const response = await fetchWishlist();
-      const items = response.items || [];
-      setWishlistIds(items.map((item) => item.product_id));
-      return { count: items.length };
+      const response = await fetchWishlistSummary();
+      return response;
     },
     staleTime: 60 * 1000,
   });
@@ -52,7 +54,7 @@ export const useWishlistSummary = () => {
 // ------------------------
 export const useAddToWishlist = () => {
   const queryClient = useQueryClient();
-  const addToWishlist = useWishlistStore((state) => state.addToWishlist);
+  // const addToWishlist = useWishlistStore((state) => state.addToWishlist);
 
   return useMutation({
     mutationFn: async (productId: string) => {
@@ -60,7 +62,7 @@ export const useAddToWishlist = () => {
       return response;
     },
     onSuccess: (data, productId) => {
-      addToWishlist(productId);
+      // addToWishlist(productId);
       if (data.message) {
         toast.success(data.message);
       } else {
@@ -71,7 +73,9 @@ export const useAddToWishlist = () => {
     },
     onError: (error: any) => {
       const message =
-        error.response?.data?.message || error.message || "خطا در افزودن به علاقه‌مندی‌ها";
+        error.response?.data?.message ||
+        error.message ||
+        "خطا در افزودن به علاقه‌مندی‌ها";
       toast.error(message);
     },
   });
@@ -82,7 +86,9 @@ export const useAddToWishlist = () => {
 // ------------------------
 export const useRemoveFromWishlist = () => {
   const queryClient = useQueryClient();
-  const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
+  const removeFromWishlist = useWishlistStore(
+    (state) => state.removeFromWishlist
+  );
 
   return useMutation({
     mutationFn: async (productId: string) => {
@@ -101,7 +107,9 @@ export const useRemoveFromWishlist = () => {
     },
     onError: (error: any) => {
       const message =
-        error.response?.data?.message || error.message || "خطا در حذف از علاقه‌مندی‌ها";
+        error.response?.data?.message ||
+        error.message ||
+        "خطا در حذف از علاقه‌مندی‌ها";
       toast.error(message);
     },
   });
@@ -115,5 +123,3 @@ export const useIsInWishlist = (productId: string | undefined) => {
   if (!productId) return false;
   return isInWishlist(productId);
 };
-
-

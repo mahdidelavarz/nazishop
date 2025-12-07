@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { User } from '../types/auth.type';
+import { useWishlistStore } from '@/features/wishlist/store/wishlistStore';
 
 /**
  * Custom hook for authentication operations
@@ -15,6 +16,7 @@ export function useAuth() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, setUser, setRefreshToken, logout: clearAuth } = useAuthStore();
+  const { clearWishlist } = useWishlistStore();
 
   // Fetch current user
   const { data, isLoading, refetch } = useQuery({
@@ -54,6 +56,7 @@ export function useAuth() {
     },
     onSuccess: () => {
       clearAuth();
+      clearWishlist();
       queryClient.clear();
       toast.success('خروج موفقیت‌آمیز');
       router.push('/login');

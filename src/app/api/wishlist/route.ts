@@ -68,6 +68,51 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// GET /api/wishlist/summary - Get wishlist summary
+export async function GET_SUMMARY(request: NextRequest) {
+  try {
+    const accessToken = request.cookies.get("accessToken")?.value;
+    if (!accessToken) {
+      return NextResponse.json(
+        { success: false, message: "لطفا وارد شوید" },
+        { status: 401 }
+      );
+    }
+
+    const payload = verifyAccessToken(accessToken);
+    if (!payload?.userId) {
+      return NextResponse.json(
+        { success: false, message: "توکن نامعتبر است" },
+        { status: 401 }
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("wishlists")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", payload.userId);
+
+    if (error) {
+      console.error("Wishlist summary error:", error);
+      return NextResponse.json(
+        { success: false, message: "خطا در دریافت تعداد علاقه‌مندی‌ها" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      count: data || 0,
+    });
+  } catch (error) {
+    console.error("Wishlist summary GET error:", error);
+    return NextResponse.json(
+      { success: false, message: "خطای سرور" },
+      { status: 500 }
+    );
+  }
+}
+
 // POST /api/wishlist - Add to wishlist
 export async function POST(request: NextRequest) {
   try {

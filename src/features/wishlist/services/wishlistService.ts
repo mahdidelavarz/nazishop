@@ -21,3 +21,13 @@ export const removeFromWishlistApi = async (
   );
   return response.data;
 };
+
+export const fetchWishlistSummary = async (): Promise<number> => {
+  const response = await apiClient.get<{ success: boolean; count: number }>(
+    "/wishlist/summary"
+  );
+  if (response.data.success) {
+    return response.data.count;
+  }
+  return 0;
+};

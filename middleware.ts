@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protected routes
-  const protectedRoutes = ['/profile', '/admin-products'];
+  const protectedRoutes = ['/profile', '/admin-products', '/wishlist'];
 
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>

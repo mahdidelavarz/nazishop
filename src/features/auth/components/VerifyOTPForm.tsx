@@ -9,8 +9,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Icon } from "@iconify/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "../store/auth.store";
 import InputComponent from "@/shared/ui/InputComponent";
 import ButtonComponent from "@/shared/ui/ButtonComponent";
@@ -35,13 +34,14 @@ export default function VerifyOTPForm({
 }: VerifyOTPFormProps) {
   const router = useRouter();
   const { setUser, setRefreshToken } = useAuthStore();
-  const [timer, setTimer] = useState(120); // 2 minutes
+  const [timer, setTimer] = useState(120);
+  const searchParams = useSearchParams();
+  const redirectedFrom = searchParams.get('redirectedFrom') || '/';
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<OTPFormData>({
     resolver: zodResolver(otpSchema),
   });
@@ -60,20 +60,20 @@ export default function VerifyOTPForm({
       const response = await axios.post("/api/auth/verify-otp", {
         phone_number: phoneNumber,
         otp_code: code,
-      });
+      },
+    );
       return response.data;
     },
     onSuccess: (data) => {
       toast.success(data.message);
       setUser(data.user);
       setRefreshToken(data.refreshToken);
-
       // Always redirect to profile page after login
       // Profile page will handle showing completion form or profile details
       if (!data.user.profile_completed) {
         router.push("/profile");
       } else {
-        router.push("/");
+        router.push(redirectedFrom || "/");
       }
     },
     onError: (error: any) => {

@@ -16,7 +16,7 @@ export default function Header() {
   const { data: cartSummary } = useCartSummary();
   const totalItems = cartSummary?.totalCount ?? 0;
   const { data: wishlistSummary } = useWishlistSummary();
-  const wishlistCount = wishlistSummary?.count ?? 0;
+  const wishlistCount = wishlistSummary ?? 0;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
