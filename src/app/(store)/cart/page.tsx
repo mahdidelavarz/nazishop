@@ -1,15 +1,11 @@
 "use client";
 
 import { useCartQuery, useRemoveCartItem, useUpdateCartItem } from "@/features/cart/hooks/useCart";
-import { useAuthStore } from "@/features/auth/store/auth.store";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import Image from "next/image";
 
 export default function CartPage() {
-  const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
   const { data: cartItems, isLoading, error } = useCartQuery();
   const { mutate: removeItem, isPending: removing } = useRemoveCartItem();
   const { mutate: updateQuantity, isPending: updating } = useUpdateCartItem();
@@ -132,17 +128,19 @@ export default function CartPage() {
                   <div className="flex gap-4">
                     {/* Product Image */}
                     <Link
-                      href={`/products/${item.products?.id}`}
+                      href={`/products/${(item.products as { slug?: string })?.slug}`}
                       className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-gray-100 hover:opacity-80 transition"
                     >
                       {item.products?.thumbnail_url ? (
-                        <img
+                        <Image
                           src={
                             item.products.thumbnail_url.startsWith("/")
                               ? item.products.thumbnail_url
                               : `/${item.products.thumbnail_url}`
                           }
-                          alt={item.products?.title}
+                          alt={item.products?.title || ""}
+                          width={128}
+                          height={128}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -155,7 +153,7 @@ export default function CartPage() {
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/products/${item.products?.id}`}
+                        href={`/products/${(item.products as { slug?: string })?.slug}`}
                         className="font-bold text-gray-900 hover:text-pink-600 transition line-clamp-2 mb-2"
                       >
                         {item.products?.title}

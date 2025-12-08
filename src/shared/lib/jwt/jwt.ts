@@ -14,8 +14,8 @@ function getSecret(name: string, minLength: number = 32): string {
 }
 
 // Read secrets once and cache them
-const ACCESS_SECRET = getSecret('JWT_ACCESS_SECRET');
-const REFRESH_SECRET = getSecret('JWT_REFRESH_SECRET');
+const ACCESS_SECRET = getSecret('JWT_ACCESS_SECRET') as jwt.Secret;
+const REFRESH_SECRET = getSecret('JWT_REFRESH_SECRET') as jwt.Secret;
 const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
@@ -24,14 +24,14 @@ const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
  * Generate Access Token (short-lived, stored in httpOnly cookie)
  */
 export function generateAccessToken(payload: JWTPayload): string {
-  return jwt.sign(payload as any, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES } as any);
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES } as jwt.SignOptions);
 }
 
 /**
  * Generate Refresh Token (long-lived, stored in Zustand)
  */
 export function generateRefreshToken(payload: JWTPayload): string {
-  return jwt.sign(payload as any, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES } as any);
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES } as jwt.SignOptions);
 }
 
 /**
@@ -40,8 +40,8 @@ export function generateRefreshToken(payload: JWTPayload): string {
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, ACCESS_SECRET) as JWTPayload;
-  } catch (error: any) {
-    console.error('Access token verification failed:', error.message);
+  } catch (error: unknown) {
+    console.error('Access token verification failed:', error);
     return null;
   }
 }
@@ -52,8 +52,8 @@ export function verifyAccessToken(token: string): JWTPayload | null {
 export function verifyRefreshToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, REFRESH_SECRET) as JWTPayload;
-  } catch (error: any) {
-    console.error('Refresh token verification failed:', error.message);
+  } catch (error: unknown) {
+    console.error('Refresh token verification failed:', error);
     return null;
   }
 }

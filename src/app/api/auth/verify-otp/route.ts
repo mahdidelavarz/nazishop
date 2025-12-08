@@ -77,14 +77,16 @@ export async function POST(req: NextRequest) {
       .eq('id', otpRecord.id);
 
     // Check if user exists
-    let { data: user, error: userError } = await supabaseAdmin
+    const { data: existingUser, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('phone_number', phone_number)
       .single();
 
+    let user = existingUser;
+
     // Create new user if not exists
-    if (userError || !user) {
+    if (userError || !existingUser) {
       const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
         .insert({
@@ -103,6 +105,13 @@ export async function POST(req: NextRequest) {
       }
 
       user = newUser;
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'کاربر یافت نشد' },
+        { status: 500 }
+      );
     }
 
     // Generate tokens

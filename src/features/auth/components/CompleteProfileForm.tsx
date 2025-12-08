@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../store/auth.store';
 import { apiClient } from '@/shared/lib/api-client';
@@ -64,9 +63,12 @@ export default function CompleteProfileForm() {
       setUser(data.user);
       router.push('/');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error.response?.data?.message || 'خطا در تکمیل پروفایل';
+        typeof error === 'object' && error !== null && 'response' in error
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((error as any).response?.data?.message ?? 'خطا در تکمیل پروفایل')
+          : 'خطا در تکمیل پروفایل';
       toast.error(message);
     },
   });

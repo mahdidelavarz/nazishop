@@ -47,7 +47,6 @@ function InputComponent({
       <div className="relative w-full">
         <input
           id={id}
-          name={name}
           type={type}
           placeholder={placeholder}
           {...(register || {})}

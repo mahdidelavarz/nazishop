@@ -46,7 +46,6 @@ function TextareaComponent({
       <div className="relative w-full">
         <textarea
           id={id}
-          name={name}
           placeholder={placeholder}
           {...(register || {})}
           {...(value !== undefined && !register ? { value } : {})}

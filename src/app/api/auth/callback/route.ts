@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
         });
 
         return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('OAuth callback error:', error);
         return NextResponse.redirect(
             new URL('/login?error=oauth_error', request.url)

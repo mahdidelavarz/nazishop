@@ -125,11 +125,13 @@ export async function POST(request: NextRequest) {
         }
 
         synced.push(item.product_id)
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Error processing item ${item.product_id}:`, error)
+        const message =
+          error instanceof Error ? error.message : 'خطای ناشناخته'
         errors.push({
           productId: item.product_id,
-          message: error.message || 'خطای ناشناخته'
+          message,
         })
       }
     }
@@ -153,7 +155,7 @@ export async function POST(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Sync cart error:', error)
     return NextResponse.json(
       { error: 'خطای سرور' },

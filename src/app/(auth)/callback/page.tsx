@@ -2,15 +2,35 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/features/auth/store/auth.store';
 import { apiClient } from '@/shared/lib/api-client';
 
-
 export default function CallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <Icon
+              icon="mdi:loading"
+              className="animate-spin text-blue-600 mx-auto mb-4"
+              width={48}
+            />
+            <p className="text-gray-600">در حال ورود...</p>
+          </div>
+        </div>
+      }
+    >
+      <CallbackPageContent />
+    </Suspense>
+  );
+}
+
+function CallbackPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser, setRefreshToken } = useAuthStore();
@@ -33,7 +53,7 @@ export default function CallbackPage() {
 
         if (refreshTokenCookie) {
           const refreshToken = refreshTokenCookie.split('=')[1];
-          
+
           // Save refresh token to Zustand
           setRefreshToken(refreshToken);
 

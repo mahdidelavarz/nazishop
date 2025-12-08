@@ -2,21 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/supabase";
 import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
 
-interface RouteParams {
-  params: Promise<{
-    productId: string;
-  }>;
-}
-
-// DELETE /api/wishlist/[productId] - Remove from wishlist
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+// GET /api/wishlist/summary - Get wishlist summary (count only)
+export async function GET(request: NextRequest) {
   try {
-    const { productId } = await params;
     const accessToken = request.cookies.get("accessToken")?.value;
-
     if (!accessToken) {
       return NextResponse.json(
         { success: false, message: "لطفا وارد شوید" },
@@ -32,27 +21,25 @@ export async function DELETE(
       );
     }
 
-    // Delete from wishlist
-    const { error } = await supabaseAdmin
+    const { count, error } = await supabaseAdmin
       .from("wishlists")
-      .delete()
-      .eq("user_id", payload.userId)
-      .eq("product_id", productId);
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", payload.userId);
 
     if (error) {
-      console.error("Remove from wishlist error:", error);
+      console.error("Wishlist summary error:", error);
       return NextResponse.json(
-        { success: false, message: "خطا در حذف از لیست علاقه‌مندی‌ها" },
+        { success: false, message: "خطا در دریافت تعداد علاقه‌مندی‌ها" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: "محصول از لیست علاقه‌مندی‌ها حذف شد",
+      count: count ?? 0,
     });
   } catch (error) {
-    console.error("Remove from wishlist API error:", error);
+    console.error("Wishlist summary GET error:", error);
     return NextResponse.json(
       { success: false, message: "خطای سرور" },
       { status: 500 }

@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
 
     const { data, error } = await supabaseAdmin
       .from('products')

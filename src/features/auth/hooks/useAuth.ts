@@ -19,7 +19,7 @@ export function useAuth() {
   const { clearWishlist } = useWishlistStore();
 
   // Fetch current user
-  const { data, isLoading, refetch } = useQuery({
+  const { isLoading, refetch } = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
       const response = await apiClient.get<{ success: boolean; user: User }>(

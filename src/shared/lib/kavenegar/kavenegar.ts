@@ -10,7 +10,7 @@ interface KavenegarResponse {
     status: number;
     message: string;
   };
-  entries: any[];
+  entries: unknown[];
 }
 
 /**
@@ -44,8 +44,13 @@ export async function sendOTPSMS(
       success: false,
       message: 'خطا در ارسال پیامک',
     };
-  } catch (error: any) {
-    console.error('Kavenegar Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.error('Kavenegar Error:', (error as any).response?.data);
+    } else {
+      console.error('Kavenegar Error:', error);
+    }
     return {
       success: false,
       message: 'خطا در ارسال پیامک',

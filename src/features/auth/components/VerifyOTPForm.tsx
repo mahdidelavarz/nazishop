@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "../store/auth.store";
@@ -76,8 +76,8 @@ export default function VerifyOTPForm({
         router.push(redirectedFrom || "/");
       }
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "کد تایید اشتباه است";
+    onError: (error: AxiosError) => {
+      const message = (error.response?.data as { message?: string })?.message || "کد تایید اشتباه است";
       toast.error(message);
     },
   });

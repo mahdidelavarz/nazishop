@@ -3,7 +3,6 @@
 
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export default function HomePage() {

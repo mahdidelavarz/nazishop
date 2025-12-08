@@ -33,7 +33,7 @@ export const useSyncGuestCart = () => {
     };
 
     syncCart();
-  }, [isAuthenticated, guestItems.length]);
+  }, [isAuthenticated, guestItems, clearGuestCart, queryClient]);
 };
 
 // ------------------------
@@ -97,8 +97,10 @@ export const useAddToCart = () => {
       toast.success("محصول به سبد خرید اضافه شد");
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
-    onError: (error: any) => {
-      toast.error(error.message || "خطا در افزودن به سبد");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "خطا در افزودن به سبد";
+      toast.error(message);
     },
   });
 };
@@ -120,8 +122,10 @@ export const useUpdateCartItem = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
-    onError: (error: any) => {
-      toast.error(error.message || "خطا در بروزرسانی تعداد");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "خطا در بروزرسانی تعداد";
+      toast.error(message);
     },
   });
 };
@@ -140,8 +144,10 @@ export const useRemoveCartItem = () => {
       toast.success("محصول از سبد حذف شد");
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
-    onError: (error: any) => {
-      toast.error(error.message || "خطا در حذف محصول");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "خطا در حذف محصول";
+      toast.error(message);
     },
   });
 };

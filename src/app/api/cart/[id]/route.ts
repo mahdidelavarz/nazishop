@@ -3,13 +3,14 @@ import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
 import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const accessToken = request.cookies.get('accessToken')?.value;
 
     if (!accessToken) {
@@ -40,7 +41,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { data: cartItem, error: fetchError } = await supabaseAdmin
       .from('cart_items')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle();
 
     if (fetchError || !cartItem) {
@@ -60,7 +61,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { error: updateError } = await supabaseAdmin
       .from('cart_items')
       .update({ quantity })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (updateError) {
       console.error('Update cart error:', updateError);
@@ -85,6 +86,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const accessToken = request.cookies.get('accessToken')?.value;
 
     if (!accessToken) {
@@ -106,7 +108,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { data: cartItem, error: fetchError } = await supabaseAdmin
       .from('cart_items')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle();
 
     if (fetchError || !cartItem) {
@@ -126,7 +128,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { error: deleteError } = await supabaseAdmin
       .from('cart_items')
       .delete()
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (deleteError) {
       console.error('Delete cart error:', deleteError);

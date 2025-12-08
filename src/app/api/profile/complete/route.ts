@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, phone_number, full_name, address, postal_code, birthday } = await req.json();
+    const { email, full_name, address, postal_code, birthday } = await req.json();
 
     // Validate required fields
     if (!full_name || !address) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update user profile
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       full_name,
       address,
       postal_code: postal_code || null,

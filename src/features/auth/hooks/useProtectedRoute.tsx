@@ -14,7 +14,7 @@ export function useProtectedRoute() {
 
   useEffect(() => {
     initializeUser();
-  }, []);
+  }, [initializeUser]);
 
   useEffect(() => {
     if (!isLoading && !user) {

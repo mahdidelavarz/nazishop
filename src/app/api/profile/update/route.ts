@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Update user profile
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       full_name,
       address,
       postal_code: postal_code || null,

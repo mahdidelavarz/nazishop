@@ -9,7 +9,6 @@ import { Icon } from "@iconify/react";
 import WishlistHeartButton from "@/features/wishlist/components/WishlistHeartButton";
 import {
   SortOption,
-  ViewMode,
   useProductsStore,
 } from "@/features/products/store/productsStore";
 

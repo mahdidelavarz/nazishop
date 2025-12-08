@@ -4,7 +4,12 @@ import { useLocalCartStore } from "../store/localCartStore";
 import toast from "react-hot-toast";
 import { supabase } from "@/shared/lib/supabase/client";
 
-export async function mergeLocalCartToServer(userId: string, localItems: any[]) {
+type LocalItem = {
+  product_id: string;
+  quantity: number;
+};
+
+export async function mergeLocalCartToServer(userId: string, localItems: LocalItem[]) {
   if (!localItems?.length) return;
 
   try {
@@ -16,11 +21,13 @@ export async function mergeLocalCartToServer(userId: string, localItems: any[]) 
 
     if (fetchError) throw fetchError;
 
-    const existingMap = new Map(existing?.map((i) => [i.product_id, i.quantity]) || []);
+    const existingMap = new Map(
+      (existing ?? []).map((i) => [i.product_id as string, i.quantity as number])
+    );
 
     // Prepare data to insert or update
-    const toInsert: any[] = [];
-    const toUpdate: any[] = [];
+    const toInsert: { user_id: string; product_id: string; quantity: number }[] = [];
+    const toUpdate: { product_id: string; new_quantity: number }[] = [];
 
     for (const item of localItems) {
       const existingQty = existingMap.get(item.product_id);
@@ -59,18 +66,8 @@ export async function mergeLocalCartToServer(userId: string, localItems: any[]) 
     // Clear local cart
     useLocalCartStore.getState().clear();
     toast.success("سبد خرید شما با حساب کاربری همگام‌سازی شد ✅");
-  } catch (error: any) {
-    console.error("mergeLocalCartToServer error:", error.message);
+  } catch (error: unknown) {
+    console.error("mergeLocalCartToServer error:", error);
     toast.error("خطا در همگام‌سازی سبد خرید");
   }
-}
-
-function mergeCarts(serverCart: CartItem[], localCart: CartItem[]): CartItem[] {
-  const merged = [...serverCart];
-  for (const item of localCart) {
-    const existing = merged.find((c) => c.product_id === item.product_id);
-    if (existing) existing.quantity += item.quantity;
-    else merged.push(item);
-  }
-  return merged;
 }

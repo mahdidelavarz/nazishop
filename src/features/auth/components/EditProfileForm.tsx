@@ -91,9 +91,12 @@ export default function EditProfileForm({
       setUser(data.user);
       onSuccess();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error.response?.data?.message || 'خطا در به‌روزرسانی پروفایل';
+        typeof error === 'object' && error !== null && 'response' in error
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((error as any).response?.data?.message ?? 'خطا در به‌روزرسانی پروفایل')
+          : 'خطا در به‌روزرسانی پروفایل';
       toast.error(message);
     },
   });

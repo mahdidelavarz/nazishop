@@ -4,9 +4,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
+
+interface ErrorResponseData {
+  message: string;
+}
 import { useGoogleLogin } from "../hooks/useGoogleLogin";
 import InputComponent from "@/shared/ui/InputComponent";
 import ButtonComponent from "@/shared/ui/ButtonComponent";
@@ -52,8 +56,8 @@ export default function OTPForm({ onSuccess }: OTPFormProps) {
       }
       onSuccess(getValues("phone_number"));
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "خطا در ارسال کد تایید";
+    onError: (error: AxiosError) => {
+const message = (error.response?.data as ErrorResponseData)?.message || "خطا در ارسال کد تایید";
       toast.error(message);
     },
   });

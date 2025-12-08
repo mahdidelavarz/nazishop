@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import OTPForm from "@/features/auth/components/OTPForm";
@@ -19,7 +19,7 @@ export default function LoginPage() {
     if (isAuthenticated && user) {
       router.push("/");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const handleOTPSent = (phone: string) => {
     setPhoneNumber(phone);
@@ -34,11 +34,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {step === "phone" ? (
-          <OTPForm onSuccess={handleOTPSent} />
-        ) : (
-          <VerifyOTPForm phoneNumber={phoneNumber} onBack={handleBack} />
-        )}
+        <Suspense fallback={null}>
+          {step === "phone" ? (
+            <OTPForm onSuccess={handleOTPSent} />
+          ) : (
+            <VerifyOTPForm phoneNumber={phoneNumber} onBack={handleBack} />
+          )}
+        </Suspense>
       </div>
     </div>
   );

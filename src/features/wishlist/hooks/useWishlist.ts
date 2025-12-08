@@ -12,6 +12,15 @@ import {
 import { WishlistItem } from "../types/wishlistTypes";
 import { useWishlistStore } from "../store/wishlistStore";
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 // ------------------------
 // Fetch full wishlist
 // ------------------------
@@ -71,11 +80,13 @@ export const useAddToWishlist = () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       queryClient.invalidateQueries({ queryKey: ["wishlist-summary"] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error.response?.data?.message ||
-        error.message ||
-        "خطا در افزودن به علاقه‌مندی‌ها";
+        typeof error === 'object' && error !== null && 'response' in error ?
+            ((error as ApiError).response?.data?.message ??
+              (error as ApiError).message ??
+              "خطا در افزودن به علاقه‌مندی‌ها")
+          : "خطا در افزودن به علاقه‌مندی‌ها";
       toast.error(message);
     },
   });
@@ -105,11 +116,13 @@ export const useRemoveFromWishlist = () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       queryClient.invalidateQueries({ queryKey: ["wishlist-summary"] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error.response?.data?.message ||
-        error.message ||
-        "خطا در حذف از علاقه‌مندی‌ها";
+        typeof error === 'object' && error !== null && 'response' in error ?
+            ((error as ApiError).response?.data?.message ??
+              (error as ApiError).message ??
+              "خطا در حذف از علاقه‌مندی‌ها")
+          : "خطا در حذف از علاقه‌مندی‌ها";
       toast.error(message);
     },
   });

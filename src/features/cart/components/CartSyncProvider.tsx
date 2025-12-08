@@ -26,19 +26,19 @@ export default function CartSyncProvider({ children }: { children: React.ReactNo
             syncGuestCart(guestItems),
             {
               loading: "در حال همگام‌سازی سبد خرید...",
-              success: (result) => {
+              success: () => {
                 // Clear guest cart after successful sync
                 clearGuestCart();
                 queryClient.invalidateQueries({ queryKey: ["cart"] });
                 return `${guestItems.length} محصول به سبد خرید شما اضافه شد`;
               },
-              error: (err) => {
+              error: (err: { message?: string }) => {
                 hasSynced.current = false; // Allow retry on error
                 return err.message || "خطا در همگام‌سازی سبد خرید";
               },
             }
           );
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Failed to sync cart:", error);
           hasSynced.current = false; // Allow retry on error
         }
@@ -46,7 +46,7 @@ export default function CartSyncProvider({ children }: { children: React.ReactNo
     };
 
     syncCart();
-  }, [isAuthenticated, guestItems.length]);
+  }, [isAuthenticated, guestItems, clearGuestCart, queryClient]);
 
   // Reset sync flag when user logs out
   useEffect(() => {
