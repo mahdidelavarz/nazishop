@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if OTP is expired
-    if (new Date(otpRecord.expires_at) < new Date(Date.now())) {
+    if (new Date(otpRecord.expires_at) > new Date(Date.now())) {
       return NextResponse.json(
         { success: false, message: 'کد تایید منقضی شده است' },
         { status: 400 }
