@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState, FormEvent } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { apiClient } from '@/shared/lib/api-client';
-import { useAdminRoute } from '@/features/auth/hooks/useAdminRoute';
-import type { Product } from '@/features/products/types/productsType';
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { apiClient } from "@/shared/lib/api-client";
+import { useAdminRoute } from "@/features/auth/hooks/useAdminRoute";
+import type { Product } from "@/features/products/types/productsType";
+import ProductForm from "@/features/admin/ui/ProductForm";
 
 export default function AdminEditProductPage() {
   const router = useRouter();
@@ -18,13 +19,6 @@ export default function AdminEditProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [title, setTitle] = useState('');
-  const [price, setPrice] = useState('');
-  const [stock, setStock] = useState('');
-  const [brand, setBrand] = useState('');
-  const [description, setDescription] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
-
   useEffect(() => {
     if (!slug) return;
 
@@ -34,19 +28,12 @@ export default function AdminEditProductPage() {
           `/products/${slug}`
         );
         if (!res.data.success || !res.data.product) {
-          throw new Error('محصول یافت نشد');
+          throw new Error("محصول یافت نشد");
         }
-        const p = res.data.product;
-        setProduct(p);
-        setTitle(p.title);
-        setPrice(String(p.price));
-        setStock(String(p.stock));
-        setBrand(p.brand || '');
-        setDescription(p.description || '');
-        setThumbnailUrl(p.thumbnail_url || '');
+        setProduct(res.data.product);
       } catch (err) {
         console.error(err);
-        setError('خطا در دریافت محصول');
+        setError("خطا در دریافت محصول");
       } finally {
         setLoadingProduct(false);
       }
@@ -56,133 +43,120 @@ export default function AdminEditProductPage() {
   }, [slug]);
 
   if (authLoading || !user) {
-    return <div className="p-8">در حال بررسی دسترسی...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">در حال بررسی دسترسی...</p>
+        </div>
+      </div>
+    );
   }
 
   if (loadingProduct) {
-    return <div className="p-8">در حال بارگذاری محصول...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">در حال بارگذاری محصول...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!product) {
-    return <div className="p-8 text-red-500">{error || 'محصول یافت نشد'}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <p className="text-red-600 text-lg mb-4">
+            {error || "محصول یافت نشد"}
+          </p>
+          <button
+            onClick={() => router.push("/admin-products")}
+            className="px-6 py-3 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium transition-all"
+          >
+            بازگشت به لیست محصولات
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: any) => {
     setError(null);
     setIsSubmitting(true);
 
     try {
       const payload = {
         id: product.id,
-        title: title.trim(),
-        price: Number(price),
-        stock: Number(stock),
-        brand: brand.trim() || null,
-        description: description.trim() || null,
-        thumbnail_url: thumbnailUrl.trim() || null,
+        title: data.title.trim(),
+        price: data.price,
+        stock: data.stock,
+        brand: data.brand?.trim() || null,
+        description: data.description?.trim() || null,
+        thumbnail_url: data.thumbnail_url?.trim() || null,
       };
 
-      const res = await apiClient.put('/admin/products', payload);
+      const res = await apiClient.put("/admin/products", payload);
       if (!res.data?.success) {
-        throw new Error(res.data?.message || 'خطا در به‌روزرسانی محصول');
+        throw new Error(res.data?.message || "خطا در به‌روزرسانی محصول");
       }
 
-      router.push('/admin-products');
+      router.push("/admin-products");
     } catch (err) {
       console.error(err);
-      setError('خطا در به‌روزرسانی محصول');
+      setError("خطا در به‌روزرسانی محصول. لطفاً دوباره تلاش کنید.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">ویرایش محصول</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">عنوان</label>
-          <input
-            className="w-full border rounded px-3 py-2 text-sm"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">قیمت</label>
-            <input
-              type="number"
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-              min={0}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">موجودی</label>
-            <input
-              type="number"
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              required
-              min={0}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">برند</label>
-          <input
-            className="w-full border rounded px-3 py-2 text-sm"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">آدرس تصویر (Thumbnail URL)</label>
-          <input
-            className="w-full border rounded px-3 py-2 text-sm"
-            value={thumbnailUrl}
-            onChange={(e) => setThumbnailUrl(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">توضیحات</label>
-          <textarea
-            className="w-full border rounded px-3 py-2 text-sm min-h-[100px]"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        {error && <p className="text-sm text-red-500">{error}</p>}
-
-        <div className="flex items-center gap-3 mt-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium disabled:opacity-60"
+            onClick={() => router.push("/admin-products")}
+            className="text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2 transition-colors"
           >
-            {isSubmitting ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+            <span>←</span>
+            بازگشت به لیست محصولات
           </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin-products')}
-            className="px-4 py-2 rounded border text-sm"
-          >
-            انصراف
-          </button>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            ویرایش محصول
+          </h1>
+          <p className="text-gray-600">اطلاعات محصول را ویرایش کنید</p>
         </div>
-      </form>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+            <div className="flex items-center gap-2">
+              <span className="text-red-600">⚠️</span>
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Form */}
+        <ProductForm
+          defaultValues={{
+            title: product.title,
+            slug: product.slug,
+            price: product.price,
+            stock: product.stock,
+            brand: product.brand || "",
+            description: product.description || "",
+            thumbnail_url: product.thumbnail_url || "",
+          }}
+          onSubmit={handleSubmit}
+          onCancel={() => router.push("/admin-products")}
+          isSubmitting={isSubmitting}
+          submitLabel="ذخیره تغییرات"
+        />
+      </div>
     </div>
   );
 }
