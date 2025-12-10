@@ -1,6 +1,6 @@
 
 import { generateOTP, sendOTPSMS } from '@/shared/lib/kavenegar/kavenegar';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {

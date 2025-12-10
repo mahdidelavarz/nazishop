@@ -1,11 +1,12 @@
 // app/products/[slug]/page.tsx
 import AddToCartButton from "@/features/products/components/AddToCartBtn";
 import { Product } from "@/features/products/types/productsType";
-import { supabaseAdmin } from "@/shared/lib/supabase/supabase";
+
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import Image from "next/image";
 import WishlistHeartButton from "@/features/wishlist/components/WishlistHeartButton";
+import { supabaseAdmin } from "@/shared/lib/supabase/server";
 
 export const revalidate = 60;
 

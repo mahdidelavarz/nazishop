@@ -4,11 +4,14 @@ import { useCartQuery, useRemoveCartItem, useUpdateCartItem } from "@/features/c
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { data: cartItems, isLoading, error } = useCartQuery();
   const { mutate: removeItem, isPending: removing } = useRemoveCartItem();
   const { mutate: updateQuantity, isPending: updating } = useUpdateCartItem();
+
+  const router = useRouter();
 
   // Redirect to login if not authenticated
   // useEffect(() => {
@@ -242,6 +245,7 @@ export default function CartPage() {
               <button
                 disabled={cartItems.length === 0}
                 className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:shadow-xl text-white font-bold flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick= {() => router.push("/checkout")}
               >
                 <Icon icon="ph:credit-card-duotone" width={24} />
                 ادامه و پرداخت

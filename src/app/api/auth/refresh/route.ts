@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { generateAccessToken, verifyRefreshToken } from '@/shared/lib/jwt/jwt';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {

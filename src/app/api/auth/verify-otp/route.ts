@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 import { generateAccessToken, generateRefreshToken } from '@/shared/lib/jwt/jwt';
 
 const MAX_ATTEMPTS = 1;

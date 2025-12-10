@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         id,
         product_id,
         quantity,
-        products:products(id, title, price, thumbnail_url)
+        products:products(id, title, price, discount:discount_percent, thumbnail_url)
       `)
       .eq('user_id', payload.userId)
       .order('created_at', { ascending: false });

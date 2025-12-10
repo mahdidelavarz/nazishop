@@ -6,6 +6,7 @@ export interface CartProduct {
   id: string;
   title: string;
   price: number;
+  discount?: number | null;
   thumbnail_url?: string | null;
 }
 

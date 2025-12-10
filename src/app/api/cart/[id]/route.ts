@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 
 interface RouteParams {
   params: Promise<{
@@ -40,7 +40,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const { data: cartItem, error: fetchError } = await supabaseAdmin
       .from('cart_items')
-      .select('id, user_id')
+      .select('id, user_id, product_id')
       .eq('id', id)
       .maybeSingle();
 
@@ -55,6 +55,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { success: false, message: 'دسترسی غیرمجاز' },
         { status: 403 }
+      );
+    }
+
+    // Validate stock before updating
+    const { data: product, error: productError } = await supabaseAdmin
+      .from('products')
+      .select('stock')
+      .eq('id', cartItem.product_id)
+      .single();
+
+    if (productError || !product) {
+      return NextResponse.json(
+        { success: false, message: 'محصول یافت نشد' },
+        { status: 404 }
+      );
+    }
+
+    if (quantity > product.stock) {
+      return NextResponse.json(
+        { success: false, message: 'تعداد درخواستی بیش از موجودی انبار است' },
+        { status: 400 }
       );
     }
 

@@ -1,7 +1,7 @@
 // app/api/profile/update/route.ts
 
 import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(req: NextRequest) {

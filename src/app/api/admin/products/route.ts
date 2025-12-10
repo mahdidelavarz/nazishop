@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/shared/lib/supabase/supabase';
+
 import { requireAdmin } from '@/shared/lib/auth/serverAuth';
+import { supabaseAdmin } from '@/shared/lib/supabase/server';
 
 // Admin-only products API
 // Base URL: /api/admin/products

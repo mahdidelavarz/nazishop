@@ -1,7 +1,8 @@
 // app/products/page.tsx
 import ProductsClient from "@/features/products/components/ClientProductWrapper";
-import { supabaseAdmin } from "@/shared/lib/supabase/supabase";
+
 import { Product } from "@/features/products/types/productsType";
+import { supabaseAdmin } from "@/shared/lib/supabase/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

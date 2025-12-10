@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
       description: 'مدیریت سفارشات مشتریان',
       icon: '🛒',
       color: 'from-green-500 to-emerald-500',
-      action: () => alert('در حال توسعه...'),
+      action: () => router.push('/admin-orders'),
     },
     {
       title: 'مشتریان',
