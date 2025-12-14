@@ -64,7 +64,7 @@ export async function PATCH(req: NextRequest) {
 
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .update(updateData)
+      .update(updateData as Record<string, unknown> & { role: 'customer' })
       .eq('id', payload.userId)
       .select()
       .single();

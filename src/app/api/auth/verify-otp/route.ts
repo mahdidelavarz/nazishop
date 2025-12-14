@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
           phone_number,
           role: 'customer',
           profile_completed: false,
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -117,13 +118,13 @@ export async function POST(req: NextRequest) {
     // Generate tokens
     const accessToken = generateAccessToken({
       userId: user.id,
-      phone_number: user.phone_number,
+      phone_number: user.phone_number || '',
       role: user.role,
     });
 
     const refreshToken = generateRefreshToken({
       userId: user.id,
-      phone_number: user.phone_number,
+      phone_number: user.phone_number || '',
       role: user.role,
     });
 
@@ -135,6 +136,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       token_hash: tokenHash,
       expires_at: expiresAt.toISOString(),
+      created_at: new Date().toISOString(),
     });
 
     // Log login

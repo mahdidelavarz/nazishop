@@ -8,7 +8,6 @@ interface RouteParams {
   }>;
 }
 
-// GET /api/orders/[id] - Get order details
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -35,51 +34,75 @@ export async function GET(
 
     // Get user role
     const { data: userData } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', payload.userId)
+      .from("users")
+      .select("role")
+      .eq("id", payload.userId)
       .single();
 
-    const isAdmin = userData?.role === 'admin';
+    const isAdmin = userData?.role === "admin";
 
-    // Fetch order (without join to avoid accidental filtering)
+    // Fetch order including shipping fields and joined user
     const { data: order, error: orderError } = await supabaseAdmin
-      .from('orders')
-      .select('id, user_id, total, status, created_at')
-      .eq('id', id)
+      .from("orders")
+      .select(
+        `
+        id,
+        user_id,
+        total,
+        status,
+        shipping_cost,
+        shipping_method,
+        created_at,
+        users:users (
+          id,
+          email,
+          full_name,
+          phone_number,
+          address,
+          postal_code,
+          birthday,
+          profile_completed,
+          created_at,
+          updated_at
+        )
+      `
+      )
+      .eq("id", id)
       .maybeSingle();
 
     if (orderError || !order) {
       return NextResponse.json(
-        { success: false, message: 'سفارش یافت نشد' },
+        { success: false, message: "سفارش یافت نشد" },
         { status: 404 }
       );
     }
 
-    // Check access control
+    // Access control
     if (!isAdmin && order.user_id !== payload.userId) {
       return NextResponse.json(
-        { success: false, message: 'دسترسی غیرمجاز' },
+        { success: false, message: "دسترسی غیرمجاز" },
         { status: 403 }
       );
     }
 
     // Fetch order items
     const { data: items, error: itemsError } = await supabaseAdmin
-      .from('order_items')
-      .select(`
+      .from("order_items")
+      .select(
+        `
         id,
         product_id,
         quantity,
         price_at_purchase,
         products:products(id, title, thumbnail_url)
-      `)
-      .eq('order_id', id);
+      `
+      )
+      .eq("order_id", id);
 
     if (itemsError) {
-      console.error('Order items fetch error:', itemsError);
+      console.error("Order items fetch error:", itemsError);
       return NextResponse.json(
-        { success: false, message: 'خطا در دریافت اقلام سفارش' },
+        { success: false, message: "خطا در دریافت اقلام سفارش" },
         { status: 500 }
       );
     }
@@ -91,11 +114,10 @@ export async function GET(
         items: items || []
       }
     });
-
   } catch (error) {
-    console.error('Order fetch error:', error);
+    console.error("Order fetch error:", error);
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { success: false, message: "خطای سرور" },
       { status: 500 }
     );
   }

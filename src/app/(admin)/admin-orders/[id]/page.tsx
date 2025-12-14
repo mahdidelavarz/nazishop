@@ -42,9 +42,7 @@ export default function AdminOrderDetailPage() {
   }, [order]);
 
   const handleUpdateStatus = async () => {
-    if (!order || selectedStatus === order.status) {
-      return;
-    }
+    if (!order || selectedStatus === order.status) return;
 
     try {
       await updateStatusMutation.mutateAsync({
@@ -79,18 +77,9 @@ export default function AdminOrderDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Icon
-            icon="ph:warning-duotone"
-            className="text-error mx-auto mb-4"
-            width={64}
-          />
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            سفارش یافت نشد
-          </h2>
-          <Link
-            href="/admin-orders"
-            className="text-accent-500 hover:text-accent-600 font-medium"
-          >
+          <Icon icon="ph:warning-duotone" className="text-error mx-auto mb-4" width={64} />
+          <h2 className="text-2xl font-bold text-foreground mb-4">سفارش یافت نشد</h2>
+          <Link href="/admin-orders" className="text-accent-500 hover:text-accent-600 font-medium">
             بازگشت به سفارش‌ها
           </Link>
         </div>
@@ -106,18 +95,13 @@ export default function AdminOrderDetailPage() {
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
-          <Link
-            href="/admin-orders"
-            className="inline-flex items-center gap-2 text-accent-500 hover:text-accent-600 mb-4"
-          >
+          <Link href="/admin-orders" className="inline-flex items-center gap-2 text-accent-500 hover:text-accent-600 mb-4">
             <Icon icon="ph:arrow-right" width={20} />
             بازگشت به سفارش‌ها
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                سفارش #{orderId.slice(0, 8)}
-              </h1>
+              <h1 className="text-3xl font-bold text-foreground">سفارش #{orderId.slice(0, 8)}</h1>
               <p className="text-neutral-600 mt-1">
                 ثبت شده در{" "}
                 {new Date(order.created_at).toLocaleDateString("fa-IR", {
@@ -141,26 +125,18 @@ export default function AdminOrderDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-neutral-600 mb-1">نام</p>
-                  <p className="font-medium text-foreground">
-                    {order.users.full_name}
-
-                  </p>
+                  <p className="font-medium text-foreground">{order.users.full_name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-neutral-600 mb-1">ایمیل</p>
-                  <p className="font-medium text-foreground">
-                    {order.users.email}
-                  </p>
+                  <p className="font-medium text-foreground">{order.users.email}</p>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-sm text-neutral-600 mb-1">آدرس ارسال</p>
                   <p className="font-medium text-foreground">
                     {order.users.address}
                     <br />
-                    {order.users.city}, {order.users.state}{" "}
                     {order.users.postal_code}
-                    <br />
-                    {order.users.country}
                   </p>
                 </div>
               </div>
@@ -171,50 +147,40 @@ export default function AdminOrderDetailPage() {
               <h2 className="text-xl font-semibold mb-4">اقلام سفارش</h2>
               <div className="space-y-4">
                 {order.items.map((item) => {
+                  const basePrice = item.products?.price || 0;
                   const finalPrice = item.products?.discount
-                    ? item.products?.price *
-                      (1 - item.products?.discount / 100)
-                    : item.products?.price;
+                    ? basePrice * (1 - item.products.discount / 100)
+                    : basePrice;
 
                   return (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-4 py-4 border-b last:border-b-0"
-                    >
-                      {item.products?.thumbnail_url ? (
+                    <div key={item.id} className="flex items-center gap-4 py-4 border-b last:border-b-0">
+                      {/* {item.products?.thumbnail_url ? (
                         <Image
-                          src={item.products?.thumbnail_url}
-                          alt={item.products?.title}
+                          src={item.products.thumbnail_url}
+                          alt={item.products.title}
                           width={80}
                           height={80}
                           className="rounded-lg object-cover"
                         />
                       ) : (
                         <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">
-                            بدون تصویر
-                          </span>
+                          <span className="text-gray-400 text-xs">بدون تصویر</span>
                         </div>
-                      )}
+                      )} */}
 
                       <div className="flex-1">
-                        <h3 className="font-medium text-foreground">
-                          {item.products?.title}
-                        </h3>
+                        <h3 className="font-medium text-foreground">{item.products?.title}</h3>
                         <p className="text-sm text-neutral-500">
-                          تعداد: {item.quantity} × {finalPrice?.toLocaleString("fa-IR")} تومان
+                          تعداد: {item.quantity} × {finalPrice.toLocaleString("fa-IR")} تومان
                         </p>
                         {item.products?.discount && (
-                          <p className="text-sm text-green-600">
-                            تخفیف: {item.products?.discount}%
-                          </p>
+                          <p className="text-sm text-green-600">تخفیف: {item.products.discount}%</p>
                         )}
                       </div>
 
                       <div className="text-left">
                         <p className="text-lg font-semibold text-foreground">
-                          {(finalPrice ? finalPrice * item.quantity : 0).toLocaleString("fa-IR")}{" "}
-                          تومان
+                          {(finalPrice * item.quantity).toLocaleString("fa-IR")} تومان
                         </p>
                       </div>
                     </div>
@@ -232,9 +198,7 @@ export default function AdminOrderDetailPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    وضعیت فعلی
-                  </label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">وضعیت فعلی</label>
                   <div className="px-3 py-2 bg-gray-100 rounded-lg text-foreground font-medium">
                     {STATUS_OPTIONS.find((s) => s.value === order.status)?.label}
                   </div>
@@ -243,14 +207,10 @@ export default function AdminOrderDetailPage() {
                 {canUpdateStatus && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">
-                        وضعیت جدید
-                      </label>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">وضعیت جدید</label>
                       <select
                         value={selectedStatus}
-                        onChange={(e) =>
-                          setSelectedStatus(e.target.value as OrderStatus)
-                        }
+                        onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       >
                         <option value={order.status}>
@@ -264,12 +224,9 @@ export default function AdminOrderDetailPage() {
                       </select>
                     </div>
 
-                    {(selectedStatus === "shipped" ||
-                      order.status === "shipped") && (
+                    {(selectedStatus === "shipped" || order.status === "shipped") && (
                       <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                          کد رهگیری
-                        </label>
+                        <label className="block text-sm font-medium text-neutral-700 mb-2">کد رهگیری</label>
                         <input
                           type="text"
                           value={trackingCode}
@@ -282,19 +239,12 @@ export default function AdminOrderDetailPage() {
 
                     <button
                       onClick={handleUpdateStatus}
-                      disabled={
-                        updateStatusMutation.isPending ||
-                        selectedStatus === order.status
-                      }
+                      disabled={updateStatusMutation.isPending || selectedStatus === order.status}
                       className="w-full bg-accent-500 text-white py-2 rounded-lg font-semibold hover:bg-accent-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
                     >
                       {updateStatusMutation.isPending ? (
                         <span className="flex items-center justify-center gap-2">
-                          <Icon
-                            icon="eos-icons:loading"
-                            className="animate-spin"
-                            width={20}
-                          />
+                          <Icon icon="eos-icons:loading" className="animate-spin" width={20} />
                           در حال به‌روزرسانی...
                         </span>
                       ) : (
@@ -305,9 +255,7 @@ export default function AdminOrderDetailPage() {
                 )}
 
                 {!canUpdateStatus && order.status !== "cancelled" && (
-                  <p className="text-sm text-neutral-600">
-                    این سفارش به وضعیت نهایی رسیده و قابل تغییر نیست.
-                  </p>
+                  <p className="text-sm text-neutral-600">این سفارش به وضعیت نهایی رسیده و قابل تغییر نیست.</p>
                 )}
               </div>
             </div>
@@ -322,26 +270,9 @@ export default function AdminOrderDetailPage() {
                   <span>{order.total.toLocaleString("fa-IR")} تومان</span>
                 </div>
 
-                {order.items.reduce((sum, item) => {
-                  if (!item.products) return sum;
-                  return sum + (item.products.discount ? item.products.discount * item.quantity : 0);
-                }, 0) > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>تخفیف</span>
-                    <span>
-                      {order.items.reduce((sum, item) => {
-                        if (!item.products) return sum;
-                        return sum + (item.products.discount ? item.products.discount * item.quantity : 0);
-                      }, 0).toLocaleString("fa-IR")} تومان-
-                    </span>
-                  </div>
-                )}
-
                 <div className="flex justify-between text-neutral-600">
                   <span>هزینه ارسال ({order.shipping_method})</span>
-                  <span>
-                    {order.users.shipping_cost.toLocaleString("fa-IR")} تومان
-                  </span>
+                  <span>{order.shipping_cost?.toLocaleString("fa-IR")} تومان</span>
                 </div>
               </div>
 
@@ -365,18 +296,15 @@ export default function AdminOrderDetailPage() {
                 </div>
                 <div>
                   <span className="text-neutral-600">تاریخ ثبت:</span>
-                  <p className="text-foreground">
-                    {new Date(order.created_at).toLocaleString("fa-IR")}
-                  </p>
+                  <p className="text-foreground">{new Date(order.created_at).toLocaleString("fa-IR")}</p>
                 </div>
                 <div>
                   <span className="text-neutral-600">آخرین به‌روزرسانی:</span>
-                  <p className="text-foreground">
-                    {new Date(order.updated_at || "").toLocaleString("fa-IR")}
-                  </p>
+                  <p className="text-foreground">{new Date(order.updated_at || "").toLocaleString("fa-IR")}</p>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>

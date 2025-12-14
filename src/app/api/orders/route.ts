@@ -165,19 +165,23 @@ export async function GET(request: NextRequest) {
 
     // Build query
     let query = supabaseAdmin
-      .from('orders')
-      .select(`
+    .from("orders")
+    .select(
+      `
         id,
         user_id,
         total,
         status,
         created_at,
-        users!inner(
+        users (
           id,
           email,
           full_name
         )
-      `, { count: 'exact' });
+      `,
+      { count: "exact" }
+    );
+  
 
     // Filter by user if not admin
     if (!isAdmin) {

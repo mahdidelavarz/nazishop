@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     // Generate new access token
     const newAccessToken = generateAccessToken({
       userId: user.id,
-      phone_number: user.phone_number,
+      phone_number: user.phone_number || '',
       role: user.role,
     });
 

@@ -36,7 +36,6 @@ export interface OrderUserInfo {
   state: string;
   postal_code: string;
   country: string;
-  shipping_cost: number;
 }
 
 // Order Interface
@@ -49,6 +48,7 @@ export interface Order {
   created_at: string;
   updated_at?: string;
   shipping_method: ShippingMethod;
+  shipping_cost: number;
 }
 
 // Order with Relations

@@ -343,7 +343,7 @@ export default function OrderDetailPage() {
                 <div className="flex justify-between text-neutral-600">
                   <span>هزینه ارسال ({order.shipping_method})</span>
                   <span>
-                    {order.users.shipping_cost.toLocaleString("fa-IR")} تومان
+                    {order.shipping_cost.toLocaleString("fa-IR")} تومان
                   </span>
                 </div>
               </div>

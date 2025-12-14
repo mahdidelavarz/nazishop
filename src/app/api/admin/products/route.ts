@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
         brand: brand ?? null,
         thumbnail_url: thumbnail_url ?? null,
         slug,
+        created_at: new Date().toISOString(),
       })
       .select(
         'id, title, description, price, original_price, thumbnail_url, slug, brand, stock'
