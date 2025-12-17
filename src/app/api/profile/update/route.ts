@@ -1,22 +1,23 @@
 // app/api/profile/update/route.ts
 
-import { supabaseAdmin } from '@/shared/lib/supabase/server';
-import { NextRequest, NextResponse } from 'next/server';
-import { requireUser } from '@/shared/lib/auth/serverAuth';
+import { supabaseAdmin } from "@/shared/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 export async function PATCH(req: NextRequest) {
   try {
     const { user, response } = await requireUser(req);
     if (response || !user) return response!;
 
-    const { email, full_name, address, postal_code, birthday } = await req.json();
+    const { email, full_name, address, postal_code, birthday } =
+      await req.json();
 
     // Validate required fields
     if (!full_name || !address) {
       return NextResponse.json(
         {
           success: false,
-          message: 'نام کامل و آدرس الزامی است',
+          message: "نام کامل و آدرس الزامی است",
         },
         { status: 400 }
       );
@@ -27,7 +28,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'فرمت ایمیل نامعتبر است',
+          message: "فرمت ایمیل نامعتبر است",
         },
         { status: 400 }
       );
@@ -47,31 +48,30 @@ export async function PATCH(req: NextRequest) {
       updateData.email = email;
     }
 
-    const { data: user, error } = await supabaseAdmin
-      .from('users')
-      .update(updateData as Record<string, unknown> & { role: 'customer' })
-      .eq('id', user.id)
+    const { data: updatedUser, error } = await supabaseAdmin
+      .from("users")
+      .update(updateData as Record<string, unknown> & { role: "customer" })
+      .eq("id", user.id)
       .select()
       .single();
 
-    if (error || !user) {
+    if (error || !updatedUser) {
       return NextResponse.json(
-        { success: false, message: 'خطا در به‌روزرسانی پروفایل' },
+        { success: false, message: "خطا در به‌روزرسانی پروفایل" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'پروفایل با موفقیت به‌روزرسانی شد',
-      user,
+      message: "پروفایل با موفقیت به‌روزرسانی شد",
+      user: updatedUser,
     });
   } catch (error) {
-    console.error('Update Profile Error:', error);
+    console.error("Update Profile Error:", error);
     return NextResponse.json(
-      { success: false, message: 'خطای سرور' },
+      { success: false, message: "خطای سرور" },
       { status: 500 }
     );
   }
 }
-

@@ -51,14 +51,14 @@ export async function POST(req: NextRequest) {
     // Don't update phone_number as it's used for authentication
     // phone_number is set during OTP verification and shouldn't be changed
 
-    const { data: user, error } = await supabaseAdmin
+    const { data: updatedUser, error } = await supabaseAdmin
       .from('users')
       .update(updateData as Record<string, unknown> & { role: 'customer' })
       .eq('id', user.id)
       .select()
       .single();
 
-    if (error || !user) {
+    if (error || !updatedUser) {
       return NextResponse.json(
         { success: false, message: 'خطا در به‌روزرسانی پروفایل' },
         { status: 500 }
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'پروفایل با موفقیت تکمیل شد',
-      user,
+      user: updatedUser,
     });
   } catch (error) {
     console.error('Complete Profile Error:', error);
