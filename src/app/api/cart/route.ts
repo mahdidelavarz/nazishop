@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
 import { supabaseAdmin } from '@/shared/lib/supabase/server';
+import { requireUser } from '@/shared/lib/auth/serverAuth';
 
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { data, error } = await supabaseAdmin
       .from('cart_items')
@@ -30,7 +15,7 @@ export async function GET(request: NextRequest) {
         quantity,
         products:products(id, title, price, discount:discount_percent, thumbnail_url)
       `)
-      .eq('user_id', payload.userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -56,23 +41,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { productId, quantity } = await request.json();
 
@@ -93,7 +63,7 @@ export async function POST(request: NextRequest) {
         .from('cart_items')
         .select('id, quantity')
         .eq('product_id', productId)
-        .eq('user_id', payload.userId)
+        .eq('user_id', user.id)
         .maybeSingle(),
     ]);
 
@@ -148,7 +118,7 @@ export async function POST(request: NextRequest) {
       const { error: insertError } = await supabaseAdmin
         .from('cart_items')
         .insert({
-          user_id: payload.userId,
+          user_id: user.id,
           product_id: productId,
           quantity,
         });

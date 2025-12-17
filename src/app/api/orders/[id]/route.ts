@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 interface RouteParams {
   params: Promise<{
@@ -15,31 +15,10 @@ export async function GET(
   try {
     const { id: rawId } = await params;
     const id = (rawId || "").trim();
-    const accessToken = request.cookies.get("accessToken")?.value;
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
-
-    // Get user role
-    const { data: userData } = await supabaseAdmin
-      .from("users")
-      .select("role")
-      .eq("id", payload.userId)
-      .single();
-
-    const isAdmin = userData?.role === "admin";
+    const isAdmin = user.role === "admin";
 
     // Fetch order including shipping fields and joined user
     const { data: order, error: orderError } = await supabaseAdmin
@@ -78,7 +57,7 @@ export async function GET(
     }
 
     // Access control
-    if (!isAdmin && order.user_id !== payload.userId) {
+    if (!isAdmin && order.user_id !== user.id) {
       return NextResponse.json(
         { success: false, message: "دسترسی غیرمجاز" },
         { status: 403 }

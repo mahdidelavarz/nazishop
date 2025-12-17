@@ -1,31 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
 import { supabaseAdmin } from '@/shared/lib/supabase/server';
+import { requireUser } from '@/shared/lib/auth/serverAuth';
 
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { count, error } = await supabaseAdmin
       .from('cart_items')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', payload.userId);
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Cart summary error:', error);

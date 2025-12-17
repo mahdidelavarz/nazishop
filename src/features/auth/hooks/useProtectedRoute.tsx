@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './useAuth';
+import { useState } from 'react';
 
 /**
  * Hook to protect routes from unauthorized access
@@ -11,16 +12,17 @@ import { useAuth } from './useAuth';
 export function useProtectedRoute() {
   const router = useRouter();
   const { user, isLoading, initializeUser } = useAuth();
+  const [initDone, setInitDone] = useState(false);
 
   useEffect(() => {
-    initializeUser();
+    initializeUser().finally(() => setInitDone(true));
   }, [initializeUser]);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (initDone && !isLoading && !user) {
       router.push('/login');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, initDone, router]);
 
   return { user, isLoading };
 }

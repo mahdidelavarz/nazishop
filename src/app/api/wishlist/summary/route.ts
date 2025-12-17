@@ -1,30 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 // GET /api/wishlist/summary - Get wishlist summary (count only)
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("accessToken")?.value;
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { count, error } = await supabaseAdmin
       .from("wishlists")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", payload.userId);
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("Wishlist summary error:", error);

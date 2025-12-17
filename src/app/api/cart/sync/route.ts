@@ -1,7 +1,7 @@
 // app/api/cart/sync/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/shared/lib/supabase/server'
-import { verifyAccessToken } from '@/shared/lib/jwt/jwt'
+import { requireUser } from '@/shared/lib/auth/serverAuth'
 
 interface GuestCartItem {
   product_id: string
@@ -10,26 +10,10 @@ interface GuestCartItem {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify user using JWT access token (httpOnly cookie)
-    const accessToken = request.cookies.get('accessToken')?.value
+    const { user, response } = await requireUser(request)
+    if (response || !user) return response!
 
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: 'غیرمجاز - لطفا وارد شوید' },
-        { status: 401 }
-      )
-    }
-
-    const payload = verifyAccessToken(accessToken)
-
-    if (!payload || !payload.userId) {
-      return NextResponse.json(
-        { error: 'نشست نامعتبر است، لطفا دوباره وارد شوید' },
-        { status: 401 }
-      )
-    }
-
-    const userId = payload.userId
+    const userId = user.id
 
     const { items } = await request.json() as { items: GuestCartItem[] }
 

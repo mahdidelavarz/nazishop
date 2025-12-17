@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 // GET /api/wishlist - Get user's wishlist
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     // Fetch wishlist with product details
     const { data, error } = await supabaseAdmin
@@ -44,7 +30,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .eq("user_id", payload.userId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -71,22 +57,8 @@ export async function GET(request: NextRequest) {
 // POST /api/wishlist - Add to wishlist
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { productId } = await request.json();
 
@@ -101,7 +73,7 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await supabaseAdmin
       .from("wishlists")
       .select("id")
-      .eq("user_id", payload.userId)
+      .eq("user_id", user.id)
       .eq("product_id", productId)
       .single();
 
@@ -116,7 +88,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from("wishlists")
       .insert({
-        user_id: payload.userId,
+        user_id: user.id,
         product_id: productId,
       })
       .select(

@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 // POST /api/orders - Create new order
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     // Fetch cart items with product pricing
     const { data: cartItems, error: cartError } = await supabaseAdmin
@@ -33,7 +19,7 @@ export async function POST(request: NextRequest) {
         products:products(id, price, discount_percent)
       `
       )
-      .eq("user_id", payload.userId);
+      .eq("user_id", user.id);
 
     if (cartError) {
       console.error("Order creation cart fetch error:", cartError);
@@ -62,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .insert({
-        user_id: payload.userId,
+        user_id: user.id,
         total,
         status: "pending",
       })
@@ -105,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Clear cart
-    await supabaseAdmin.from("cart_items").delete().eq("user_id", payload.userId);
+    await supabaseAdmin.from("cart_items").delete().eq("user_id", user.id);
 
     return NextResponse.json(
       {
@@ -130,31 +116,10 @@ export async function POST(request: NextRequest) {
 // GET /api/orders - List orders
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("accessToken")?.value;
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
-
-    // Get user role
-    const { data: userData } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', payload.userId)
-      .single();
-
-    const isAdmin = userData?.role === 'admin';
+    const isAdmin = user.role === 'admin';
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -185,7 +150,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by user if not admin
     if (!isAdmin) {
-      query = query.eq('user_id', payload.userId);
+      query = query.eq('user_id', user.id);
     }
 
     // Filter by status if provided

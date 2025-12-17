@@ -1,28 +1,13 @@
 // app/api/profile/complete/route.ts
 
-import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
 import { supabaseAdmin } from '@/shared/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/shared/lib/auth/serverAuth';
 
 export async function POST(req: NextRequest) {
   try {
-    const accessToken = req.cookies.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(req);
+    if (response || !user) return response!;
 
     const { email, full_name, address, postal_code, birthday } = await req.json();
 
@@ -69,7 +54,7 @@ export async function POST(req: NextRequest) {
     const { data: user, error } = await supabaseAdmin
       .from('users')
       .update(updateData as Record<string, unknown> & { role: 'customer' })
-      .eq('id', payload.userId)
+      .eq('id', user.id)
       .select()
       .single();
 

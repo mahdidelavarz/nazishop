@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireAdmin } from "@/shared/lib/auth/serverAuth";
 
 interface RouteParams {
   params: Promise<{
@@ -23,36 +23,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const accessToken = request.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
-
-    // Check admin role
-    const { data: userData } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', payload.userId)
-      .single();
-
-    if (userData?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, message: 'دسترسی غیرمجاز - نیاز به دسترسی مدیر' },
-        { status: 403 }
-      );
-    }
+    const { response } = await requireAdmin(request);
+    if (response) return response;
 
     const body = await request.json();
     const { status, tracking_code } = body;

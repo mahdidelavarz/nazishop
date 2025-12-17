@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 // POST /api/payments/verify - Verify payment
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const body = await request.json();
     const { order_id, success: paymentSuccess } = body;
@@ -47,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify ownership
-    if (order.user_id !== payload.userId) {
+    if (order.user_id !== user.id) {
       return NextResponse.json(
         { success: false, message: 'دسترسی غیرمجاز' },
         { status: 403 }

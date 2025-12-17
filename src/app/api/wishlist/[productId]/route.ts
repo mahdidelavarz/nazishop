@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/shared/lib/supabase/server";
-import { verifyAccessToken } from "@/shared/lib/jwt/jwt";
+import { requireUser } from "@/shared/lib/auth/serverAuth";
 
 interface RouteParams {
   params: Promise<{
@@ -15,28 +15,14 @@ export async function DELETE(
 ) {
   try {
     const { productId } = await params;
-    const accessToken = request.cookies.get("accessToken")?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: "لطفا وارد شوید" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { success: false, message: "توکن نامعتبر است" },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     // Delete from wishlist
     const { error } = await supabaseAdmin
       .from("wishlists")
       .delete()
-      .eq("user_id", payload.userId)
+      .eq("user_id", user.id)
       .eq("product_id", productId);
 
     if (error) {

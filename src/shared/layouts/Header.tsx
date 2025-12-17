@@ -1,15 +1,10 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-
-// Mock hooks for demonstration
-const useAuth = () => ({
-  user: { full_name: 'سارا احمدی', phone_number: '09123456789' },
-  isAuthenticated: true,
-  logout: () => console.log('Logout')
-});
-
-const useCartSummary = () => ({ data: { totalCount: 3 } });
-const useWishlistSummary = () => ({ data: 5 });
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useCartSummary } from '@/features/cart/hooks/useCart';
+import { useWishlistSummary } from '@/features/wishlist/hooks/useWishlist';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();

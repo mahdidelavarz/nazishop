@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken } from '@/shared/lib/jwt/jwt';
 import { supabaseAdmin } from '@/shared/lib/supabase/server';
+import { requireUser } from '@/shared/lib/auth/serverAuth';
 
 interface RouteParams {
   params: Promise<{
@@ -11,23 +11,8 @@ interface RouteParams {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const accessToken = request.cookies.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { quantity } = await request.json();
 
@@ -51,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (cartItem.user_id !== payload.userId) {
+    if (cartItem.user_id !== user.id) {
       return NextResponse.json(
         { success: false, message: 'دسترسی غیرمجاز' },
         { status: 403 }
@@ -108,23 +93,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const accessToken = request.cookies.get('accessToken')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyAccessToken(accessToken);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+    const { user, response } = await requireUser(request);
+    if (response || !user) return response!;
 
     const { data: cartItem, error: fetchError } = await supabaseAdmin
       .from('cart_items')
@@ -139,7 +109,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (cartItem.user_id !== payload.userId) {
+    if (cartItem.user_id !== user.id) {
       return NextResponse.json(
         { success: false, message: 'دسترسی غیرمجاز' },
         { status: 403 }
