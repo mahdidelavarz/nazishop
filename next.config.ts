@@ -11,7 +11,10 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+    // Allow unoptimized images for external URLs that might have issues
     unoptimized: false,
+    // Add loader for better compatibility
+    loader: 'default',
   },
   compress: true,
   poweredByHeader: false,

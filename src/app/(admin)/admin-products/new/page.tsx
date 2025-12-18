@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/shared/lib/api-client";
 import { useAdminRoute } from "@/features/auth/hooks/useAdminRoute";
-import ProductForm from "@/features/admin/ui/ProductForm";
+import ProductForm, { ProductFormData } from "@/features/admin/ui/ProductForm";
 
 export default function AdminNewProductPage() {
   const router = useRouter();
@@ -23,11 +23,59 @@ export default function AdminNewProductPage() {
     );
   }
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: ProductFormData) => {
     setError(null);
     setIsSubmitting(true);
 
     try {
+      // Upload images (if any) to Supabase via API route
+      let uploadedImageUrls: string[] = [];
+      const files = (data as any).images as FileList | undefined;
+
+      if (files && files.length > 0) {
+        const formData = new FormData();
+        Array.from(files).forEach((file) => {
+          formData.append("files", file);
+        });
+
+        const uploadRes = await fetch("/api/admin/products/upload", {
+          method: "POST",
+          body: formData,
+          credentials: "include", // Include cookies for authentication
+        });
+
+        // Get raw response text first
+        const responseText = await uploadRes.text();
+        let uploadJson: any = null;
+        
+        try {
+          uploadJson = JSON.parse(responseText);
+        } catch (e) {
+          console.error("Failed to parse upload response JSON", e);
+          console.error("Raw response:", responseText);
+          throw new Error(
+            `خطا در پردازش پاسخ سرور: ${responseText.substring(0, 100)}`
+          );
+        }
+
+        if (!uploadRes.ok || !uploadJson?.success) {
+          console.error("Upload failed:", {
+            status: uploadRes.status,
+            statusText: uploadRes.statusText,
+            body: uploadJson,
+            rawResponse: responseText,
+          });
+          throw new Error(
+            uploadJson?.message ||
+              uploadJson?.details ||
+              `خطا در آپلود تصاویر محصول (کد: ${uploadRes.status})`
+          );
+        }
+
+        uploadedImageUrls = uploadJson.urls || [];
+        console.log('Uploaded image URLs:', uploadedImageUrls);
+      }
+
       const payload = {
         title: data.title.trim(),
         slug: data.slug.trim(),
@@ -35,8 +83,17 @@ export default function AdminNewProductPage() {
         stock: data.stock,
         brand: data.brand?.trim() || null,
         description: data.description?.trim() || null,
-        thumbnail_url: data.thumbnail_url?.trim() || null,
+        // Use first uploaded image as thumbnail if available, otherwise fallback to manual URL
+        thumbnail_url:
+          uploadedImageUrls[0] || data.thumbnail_url?.trim() || null,
+        // Store all uploaded image URLs if your DB supports it (e.g. jsonb column)
+        images: uploadedImageUrls.length ? uploadedImageUrls : undefined,
       };
+
+      console.log('Product payload with images:', {
+        thumbnail_url: payload.thumbnail_url,
+        images: payload.images,
+      });
 
       const res = await apiClient.post("/admin/products", payload);
       if (!res.data?.success) {
@@ -44,9 +101,11 @@ export default function AdminNewProductPage() {
       }
 
       router.push("/admin-products");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("خطا در ایجاد محصول. لطفاً دوباره تلاش کنید.");
+      // Extract error message from axios error response or error object
+      const errorMessage = err?.response?.data?.message || err?.message || "خطا در ایجاد محصول. لطفاً دوباره تلاش کنید.";
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

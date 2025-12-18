@@ -14,14 +14,44 @@ export const revalidate = 60; // ISR: re-generate page every 60 seconds
 export const dynamic = 'force-static';
 
 export default async function ProductsPage() {
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .select("id, title, description, price, original_price, thumbnail_url, slug, brand, stock")
-    .order("created_at", { ascending: false });
+  try {
+    // First, fetch products without nested query to avoid relationship issues
+    const { data: productsData, error: productsError } = await supabaseAdmin
+      .from("products")
+      .select("id, title, description, price, original_price, thumbnail_url, slug, brand, stock")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Fetch products error:", error);
+    if (productsError || !productsData) {
+      console.error("Fetch products error:", productsError);
+      return <ProductsClient initialProducts={[]} />;
+    }
+
+    // Then, fetch product_details separately and merge
+    const productIds = productsData.map(p => p.id);
+    const { data: detailsData } = await supabaseAdmin
+      .from("product_details")
+      .select("product_id, images")
+      .in("product_id", productIds);
+
+    // Merge product_details with products
+    const productsWithDetails = productsData.map(product => {
+      const details = detailsData?.find(d => d.product_id === product.id);
+      const mergedProduct = {
+        ...product,
+        details: details ? [{ images: details.images || [] }] : null,
+      } as Product;
+      
+      // Debug logging
+      if (details?.images && details.images.length > 0) {
+        console.log(`Product ${product.title} has images:`, details.images);
+      }
+      
+      return mergedProduct;
+    });
+
+    return <ProductsClient initialProducts={productsWithDetails} />;
+  } catch (err) {
+    console.error("Products page error:", err);
+    return <ProductsClient initialProducts={[]} />;
   }
-
-  return <ProductsClient initialProducts={(data as Product[]) || []} />;
 }

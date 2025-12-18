@@ -110,40 +110,75 @@ export default async function SingleProductPage({ params }: { params: Promise<{ 
 
               {/* Main Image */}
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-                {product.thumbnail_url ? (
-                  <Image
-                    src={product.thumbnail_url.startsWith('/') ? product.thumbnail_url : `/${product.thumbnail_url}`}
-                    alt={product.title}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
-                    priority
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Icon icon="ph:image-duotone" className="text-gray-300" width={64} />
-                  </div>
-                )}
+                {(() => {
+                  // Helper to normalize image URLs
+                  const normalizeUrl = (url: string | null | undefined): string | null => {
+                    if (!url || typeof url !== 'string') return null;
+                    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                    if (url.startsWith('/')) return url;
+                    return `/${url}`;
+                  };
+                  
+                  // Priority: 1) First uploaded image, 2) thumbnail_url, 3) placeholder
+                  const mainImage = normalizeUrl(
+                    product.details?.[0]?.images?.[0] || 
+                    product.thumbnail_url || 
+                    null
+                  );
+                  
+                  // Unoptimize all external URLs (http/https)
+                  const shouldUnoptimize = mainImage?.startsWith('http://') || mainImage?.startsWith('https://');
+                  
+                  return mainImage ? (
+                    <Image
+                      src={mainImage}
+                      alt={product.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-cover"
+                      priority
+                      unoptimized={shouldUnoptimize}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Icon icon="ph:image-duotone" className="text-gray-300" width={64} />
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
             {/* Thumbnail Gallery */}
             {product.details?.[0]?.images && product.details[0].images.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {product.details[0].images.map((img, i) => (
-                  <div
-                    key={i}
-                    className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-pointer transition"
-                  >
-                    <Image
-                      src={img}
-                      alt={`تصویر ${i + 1}`}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
+                {product.details[0].images.map((img, i) => {
+                  const normalizeUrl = (url: string | null | undefined): string | null => {
+                    if (!url || typeof url !== 'string') return null;
+                    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                    if (url.startsWith('/')) return url;
+                    return `/${url}`;
+                  };
+                  
+                  const normalizedImg = normalizeUrl(img);
+                  // Unoptimize all external URLs (http/https)
+                  const shouldUnoptimize = normalizedImg?.startsWith('http://') || normalizedImg?.startsWith('https://');
+                  
+                  return normalizedImg ? (
+                    <div
+                      key={i}
+                      className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-pink-500 cursor-pointer transition"
+                    >
+                      <Image
+                        src={normalizedImg}
+                        alt={`${product.title} - تصویر ${i + 1}`}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        unoptimized={shouldUnoptimize}
+                      />
+                    </div>
+                  ) : null;
+                })}
               </div>
             )}
           </div>

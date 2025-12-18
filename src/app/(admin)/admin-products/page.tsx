@@ -171,15 +171,32 @@ export default function AdminProductsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            {product.thumbnail_url ? (
-                              <img
-                                src={product.thumbnail_url}
-                                alt={product.title}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                            ) : (
-                              <span className="text-xl">💄</span>
-                            )}
+                            {(() => {
+                              // Helper to normalize image URLs
+                              const normalizeUrl = (url: string | null | undefined): string | null => {
+                                if (!url || typeof url !== 'string') return null;
+                                if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                                if (url.startsWith('/')) return url;
+                                return `/${url}`;
+                              };
+                              
+                              // Priority: 1) First uploaded image, 2) thumbnail_url, 3) placeholder
+                              const imageUrl = normalizeUrl(
+                                (product as any).details?.[0]?.images?.[0] || 
+                                product.thumbnail_url || 
+                                null
+                              );
+                              
+                              return imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={product.title}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <span className="text-xl">💄</span>
+                              );
+                            })()}
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">

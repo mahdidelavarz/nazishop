@@ -12,6 +12,31 @@ import {
   useProductsStore,
 } from "@/features/products/store/productsStore";
 
+// Helper function to normalize image URLs for Next.js Image component
+function normalizeImageUrl(url: string | null | undefined): string | null {
+  if (!url || typeof url !== 'string') return null;
+  
+  // Already an absolute URL (http:// or https://)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Relative path starting with /
+  if (url.startsWith('/')) {
+    return url;
+  }
+  
+  // Relative path without / - prepend /
+  return `/${url}`;
+}
+
+// Check if URL is external (http/https) or Supabase - these need unoptimized
+function shouldUnoptimize(url: string | null): boolean {
+  if (!url) return false;
+  // All external URLs (including Supabase) should be unoptimized
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 interface ProductsClientProps {
   initialProducts: Product[];
 }
@@ -291,23 +316,29 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                         className="flex gap-4 bg-white rounded-xl p-4 hover:shadow-lg transition group"
                       >
                         <div className="w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 relative">
-                          {product.thumbnail_url ? (
-                            <Image
-                              src={
-                                product.thumbnail_url.startsWith("/")
-                                  ? product.thumbnail_url
-                                  : `/${product.thumbnail_url}`
-                              }
-                              alt={product.title}
-                              fill
-                              sizes="128px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Icon icon="ph:image-duotone" className="text-gray-300" width={32} />
-                            </div>
-                          )}
+                          {(() => {
+                            // Priority: 1) First uploaded image, 2) thumbnail_url, 3) placeholder
+                            const imageUrl = normalizeImageUrl(
+                              product.details?.[0]?.images?.[0] || 
+                              product.thumbnail_url || 
+                              null
+                            );
+                            
+                            return imageUrl ? (
+                              <Image
+                                src={imageUrl}
+                                alt={product.title}
+                                fill
+                                sizes="128px"
+                                className="object-cover"
+                                unoptimized={shouldUnoptimize(imageUrl)}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Icon icon="ph:image-duotone" className="text-gray-300" width={32} />
+                              </div>
+                            );
+                          })()}
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-gray-800 mb-1 group-hover:text-pink-600">
@@ -371,24 +402,30 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                           isOutOfStock ? "opacity-60" : ""
                         }`}
                       >
-                        {product.thumbnail_url ? (
-                          <Image
-                            src={
-                              product.thumbnail_url.startsWith("/")
-                                ? product.thumbnail_url
-                                : `/${product.thumbnail_url}`
-                            }
-                            alt={product.title}
-                            fill
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                            priority={false}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Icon icon="ph:image-duotone" className="text-gray-300" width={48} />
-                          </div>
-                        )}
+                        {(() => {
+                          // Priority: 1) First uploaded image, 2) thumbnail_url, 3) placeholder
+                          const imageUrl = normalizeImageUrl(
+                            product.details?.[0]?.images?.[0] || 
+                            product.thumbnail_url || 
+                            null
+                          );
+                          
+                          return imageUrl ? (
+                            <Image
+                              src={imageUrl}
+                              alt={product.title}
+                              fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              className="object-cover transition-transform duration-500 group-hover:scale-110"
+                              priority={false}
+                              unoptimized={shouldUnoptimize(imageUrl)}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Icon icon="ph:image-duotone" className="text-gray-300" width={48} />
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex flex-col p-4 flex-1">
