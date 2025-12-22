@@ -1,47 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { requireAdmin } from '@/shared/lib/auth/serverAuth';
 import { supabaseAdmin } from '@/shared/lib/supabase/server';
 
 // Admin-only products API
 // Base URL: /api/admin/products
 
+// GET - Fetch all products (admin view)
 export async function GET(req: NextRequest) {
   const { response } = await requireAdmin(req);
-  if (response) return response; // 401 or 403
+  if (response) return response;
 
   try {
-    // First, fetch products without nested query to avoid relationship issues
-    const { data: productsData, error: productsError } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('products')
-      .select('id, title, description, price, original_price, thumbnail_url, slug, brand, stock')
+      .select(`
+        id,
+        title,
+        slug,
+        price,
+        original_price,
+        discount_percent,
+        stock,
+        brand,
+        thumbnail_url,
+        is_public,
+        sku,
+        category_id
+      `)
       .order('created_at', { ascending: false });
 
-    if (productsError || !productsData) {
-      console.error('Admin products GET error:', productsError);
+    if (error) {
+      console.error('Admin products GET error:', error);
       return NextResponse.json(
         { success: false, message: 'خطا در دریافت محصولات' },
         { status: 500 }
       );
     }
 
-    // Then, fetch product_details separately and merge
-    const productIds = productsData.map(p => p.id);
-    const { data: detailsData } = await supabaseAdmin
-      .from('product_details')
-      .select('product_id, images')
-      .in('product_id', productIds);
-
-    // Merge product_details with products
-    const productsWithDetails = productsData.map(product => {
-      const details = detailsData?.find(d => d.product_id === product.id);
-      return {
-        ...product,
-        details: details ? [{ images: details.images || [] }] : null,
-      };
+    return NextResponse.json({
+      success: true,
+      products: data || [],
     });
-
-    return NextResponse.json({ success: true, products: productsWithDetails || [] });
   } catch (error) {
     console.error('Admin products GET error:', error);
     return NextResponse.json(
@@ -51,10 +50,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Create new product
+// POST - Create new product
 export async function POST(req: NextRequest) {
   const { response, user } = await requireAdmin(req);
-  if (response || !user) return response!; // 401 or 403
+  if (response || !user) return response!;
 
   try {
     const body = await req.json();
@@ -67,16 +66,23 @@ export async function POST(req: NextRequest) {
       brand,
       thumbnail_url,
       slug,
+      sku,
+      tags,
+      category_id,
+      is_public,
+      images,
     } = body;
 
-    if (!title || !price || !stock || !slug) {
+    // Validation
+    if (!title || price === undefined || stock === undefined || !slug) {
       return NextResponse.json(
         { success: false, message: 'عنوان، قیمت، موجودی و اسلاگ الزامی هستند' },
         { status: 400 }
       );
     }
 
-    const { data, error } = await supabaseAdmin
+    // Create product
+    const { data: product, error: productError } = await supabaseAdmin
       .from('products')
       .insert({
         title,
@@ -87,116 +93,67 @@ export async function POST(req: NextRequest) {
         brand: brand ?? null,
         thumbnail_url: thumbnail_url ?? null,
         slug,
+        sku: sku ?? null,
+        tags: tags ?? null,
+        category_id: category_id ?? null,
+        is_public: is_public ?? true,
         created_at: new Date().toISOString(),
       })
-      .select(
-        'id, title, description, price, original_price, thumbnail_url, slug, brand, stock'
-      )
+      .select()
       .single();
 
-    if (error || !data) {
-      console.error('Admin products POST error:', {
-        error,
-        errorMessage: error?.message,
-        errorCode: error?.code,
-        errorDetails: error?.details,
-      });
+    if (productError || !product) {
+      console.error('Admin products POST error:', productError);
 
-      // Handle duplicate slug error (PostgreSQL unique constraint violation)
-      if (error?.code === '23505' || error?.message?.includes('duplicate key')) {
+      // Handle duplicate slug error
+      if (productError?.code === '23505' || productError?.message?.includes('duplicate key')) {
         return NextResponse.json(
-          { 
-            success: false, 
+          {
+            success: false,
             message: 'این اسلاگ قبلاً استفاده شده است. لطفاً اسلاگ دیگری انتخاب کنید.',
-            details: 'Slug already exists',
           },
           { status: 400 }
         );
       }
 
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'خطا در ایجاد محصول',
-          details: error?.message || 'Unknown error',
-        },
+        { success: false, message: 'خطا در ایجاد محصول' },
         { status: 500 }
       );
     }
 
     // Save images to product_details if provided
-    const images = body.images;
     if (images && Array.isArray(images) && images.length > 0) {
-      console.log('Saving images to product_details:', {
-        productId: data.id,
-        images,
-      });
-
-      // Check if product_details record exists (using maybeSingle to avoid error if not found)
-      const { data: existingDetails, error: checkError } = await supabaseAdmin
+      const { error: detailsError } = await supabaseAdmin
         .from('product_details')
-        .select('id')
-        .eq('product_id', data.id)
-        .maybeSingle();
+        .insert({
+          product_id: product.id,
+          images,
+        });
 
-      if (checkError) {
-        console.error('Error checking product_details:', checkError);
-      }
-
-      if (existingDetails) {
-        // Update existing product_details
-        const { error: updateError } = await supabaseAdmin
-          .from('product_details')
-          .update({ images })
-          .eq('product_id', data.id);
-        
-        if (updateError) {
-          console.error('Error updating product_details:', updateError);
-          // Don't fail the whole request if product_details update fails
-        } else {
-          console.log('Successfully updated product_details with images');
-        }
-      } else {
-        // Create new product_details record
-        const { error: insertError } = await supabaseAdmin
-          .from('product_details')
-          .insert({
-            product_id: data.id,
-            images,
-          });
-        
-        if (insertError) {
-          console.error('Error inserting product_details:', insertError);
-          // Don't fail the whole request if product_details insert fails
-          // The product was created successfully, just log the error
-        } else {
-          console.log('Successfully created product_details with images');
-        }
+      if (detailsError) {
+        console.error('Error creating product_details:', detailsError);
+        // Don't fail the request, product was created successfully
       }
     }
 
-    return NextResponse.json({ success: true, product: data });
-  } catch (error: any) {
-    console.error('Admin products POST catch error:', {
-      error,
-      message: error?.message,
-      stack: error?.stack,
+    return NextResponse.json({
+      success: true,
+      product,
     });
+  } catch (error) {
+    console.error('Admin products POST error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Server error',
-        details: error?.message || 'Unknown error occurred',
-      },
+      { success: false, message: 'Server error' },
       { status: 500 }
     );
   }
 }
 
-// Update existing product
+// PUT - Update existing product
 export async function PUT(req: NextRequest) {
   const { response } = await requireAdmin(req);
-  if (response) return response; // 401 or 403
+  if (response) return response;
 
   try {
     const body = await req.json();
@@ -209,13 +166,33 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // Remove undefined values and images from updates (images go to product_details)
+    const cleanUpdates: Record<string, any> = {};
+    const allowedFields = [
+      'title',
+      'description',
+      'price',
+      'original_price',
+      'stock',
+      'brand',
+      'thumbnail_url',
+      'sku',
+      'tags',
+      'category_id',
+      'is_public',
+    ];
+
+    for (const field of allowedFields) {
+      if (updates[field] !== undefined) {
+        cleanUpdates[field] = updates[field];
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('products')
-      .update(updates)
+      .update(cleanUpdates)
       .eq('id', id)
-      .select(
-        'id, title, description, price, original_price, thumbnail_url, slug, brand, stock'
-      )
+      .select()
       .single();
 
     if (error || !data) {
@@ -226,48 +203,12 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, product: data });
+    return NextResponse.json({
+      success: true,
+      product: data,
+    });
   } catch (error) {
     console.error('Admin products PUT error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// Delete product
-export async function DELETE(req: NextRequest) {
-  const { response } = await requireAdmin(req);
-  if (response) return response; // 401 or 403
-
-  try {
-    const body = await req.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: 'شناسه محصول الزامی است' },
-        { status: 400 }
-      );
-    }
-
-    const { error } = await supabaseAdmin
-      .from('products')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Admin products DELETE error:', error);
-      return NextResponse.json(
-        { success: false, message: 'خطا در حذف محصول' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Admin products DELETE error:', error);
     return NextResponse.json(
       { success: false, message: 'Server error' },
       { status: 500 }

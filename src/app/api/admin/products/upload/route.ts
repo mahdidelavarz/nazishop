@@ -20,8 +20,6 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const files = formData.getAll('files') as File[];
 
-    console.log('Upload route: Received files count:', files.length);
-
     if (!files || files.length === 0) {
       console.error('Upload route: No files received');
       return NextResponse.json(

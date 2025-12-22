@@ -42,16 +42,19 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Transform the response to match the expected structure
+    // Note: Supabase returns related data as array when using foreign key relation
+    const detailsData = Array.isArray(data.details) ? data.details[0] : data.details;
+
     const product = {
       ...data,
-      product_details: data.details ? {
-        description: data.details.description,
-        specifications: data.details.specifications,
-        images: data.details.images,
-        extra_info: data.details.extra_info || null,
-        weight: data.details.weight || null,
-        dimensions: data.details.dimensions || null,
-        video_url: data.details.video_url || null,
+      product_details: detailsData ? {
+        description: detailsData.description,
+        specifications: detailsData.specifications,
+        images: detailsData.images,
+        extra_info: detailsData.extra_info || null,
+        weight: detailsData.weight || null,
+        dimensions: detailsData.dimensions || null,
+        video_url: detailsData.video_url || null,
       } : null,
     };
 
