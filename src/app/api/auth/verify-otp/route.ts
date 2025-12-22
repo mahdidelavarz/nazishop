@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     // Hash and store refresh token
     const tokenHash = await bcrypt.hash(refreshToken, 10);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + 120 * 24 * 60 * 60 * 1000); // 4 months
 
     await supabaseAdmin.from('refresh_tokens').insert({
       user_id: user.id,
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 7 * 24 * 60 * 60, // 1 week
       path: '/',
     });
 

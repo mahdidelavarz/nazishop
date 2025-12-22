@@ -7,6 +7,7 @@ import { ProductImage } from "./ProductImage";
 import { ProductBadges } from "./ProductBadges";
 import WishlistHeartButton from "@/features/wishlist/components/WishlistHeartButton";
 import { getProductImages } from "@/features/products/utils/product";
+import { Icon } from "@iconify/react";
 
 interface ProductImageGalleryProps {
   product: SingleProduct;
@@ -15,6 +16,20 @@ interface ProductImageGalleryProps {
 export function ProductImageGallery({ product }: ProductImageGalleryProps) {
   const images = getProductImages(product);
   const [activeImage, setActiveImage] = useState(0);
+
+  // Handle empty images array
+  if (images.length === 0) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+          <div className="text-gray-400 text-center">
+            <Icon icon="ph:image-duotone" width={64} />
+            <p className="mt-2 text-sm">تصویری موجود نیست</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -33,7 +48,6 @@ export function ProductImageGallery({ product }: ProductImageGalleryProps) {
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
-            priority
           />
         </div>
       </div>

@@ -24,7 +24,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         stock,
         thumbnail_url,
         slug,
-        details:product_details(description, specifications, images)
+        rating,
+        reviews_count,
+        discount_percent,
+        details:product_details(description, specifications, images, extra_info, weight, dimensions, video_url)
       `
       )
       .eq('slug', slug)
@@ -38,9 +41,26 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Transform the response to match the expected structure
+    const product = {
+      ...data,
+      product_details: data.details ? {
+        description: data.details.description,
+        specifications: data.details.specifications,
+        images: data.details.images,
+        extra_info: data.details.extra_info || null,
+        weight: data.details.weight || null,
+        dimensions: data.details.dimensions || null,
+        video_url: data.details.video_url || null,
+      } : null,
+    };
+
+    // Remove the 'details' field as it's been transformed to 'product_details'
+    delete (product as any).details;
+
     return NextResponse.json({
       success: true,
-      product: data,
+      product,
     });
   } catch (error) {
     console.error('Product GET error:', error);

@@ -16,8 +16,8 @@ function getSecret(name: string, minLength: number = 32): string {
 // Read secrets once and cache them
 const ACCESS_SECRET = getSecret('JWT_ACCESS_SECRET') as jwt.Secret;
 const REFRESH_SECRET = getSecret('JWT_REFRESH_SECRET') as jwt.Secret;
-const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
-const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES_IN || '7d'; // 1 week
+const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '120d'; // 4 months
 
 
 /**

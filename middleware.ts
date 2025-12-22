@@ -9,6 +9,17 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
 
+  // Public routes that should NEVER be protected
+  const publicRoutes = ['/', '/products', '/login', '/register', '/otp'];
+  const isPublicRoute = publicRoutes.some((route) => 
+    pathname === route || pathname.startsWith('/products/')
+  );
+
+  // If it's a public route, allow access without authentication
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
   // Protected routes
   const protectedRoutes = ['/profile', '/admin-products', '/wishlist'];
 

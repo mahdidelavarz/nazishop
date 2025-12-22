@@ -57,10 +57,14 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
     sortBy,
   ]);
 
+  const isPriceRangeDefault = 
+    priceRange[0] === 0 && priceRange[1] === 1_000_000_000;
+
   const activeFiltersCount =
     selectedBrands.length +
     (showInStock ? 1 : 0) +
-    (showWithDiscount ? 1 : 0);
+    (showWithDiscount ? 1 : 0) +
+    (!isPriceRangeDefault ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
