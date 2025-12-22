@@ -167,7 +167,19 @@ export async function PUT(req: NextRequest) {
     }
 
     // Remove undefined values and images from updates (images go to product_details)
-    const cleanUpdates: Record<string, any> = {};
+    const cleanUpdates: {
+      title?: string;
+      description?: string | null;
+      price?: number;
+      original_price?: number | null;
+      stock?: number;
+      brand?: string | null;
+      thumbnail_url?: string | null;
+      sku?: string | null;
+      tags?: string[] | null;
+      category_id?: string | null;
+      is_public?: boolean;
+    } = {};
     const allowedFields = [
       'title',
       'description',
@@ -184,13 +196,13 @@ export async function PUT(req: NextRequest) {
 
     for (const field of allowedFields) {
       if (updates[field] !== undefined) {
-        cleanUpdates[field] = updates[field];
+        cleanUpdates[field as keyof typeof cleanUpdates] = updates[field];
       }
     }
 
     const { data, error } = await supabaseAdmin
       .from('products')
-      .update(cleanUpdates)
+      .update(cleanUpdates as any)
       .eq('id', id)
       .select()
       .single();

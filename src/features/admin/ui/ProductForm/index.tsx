@@ -33,6 +33,8 @@ export default function ProductForm({
     defaultValues: {
       ...defaultFormValues,
       ...defaultValues,
+      // Ensure tags is always an array, never undefined
+      tags: defaultValues?.tags ?? defaultFormValues.tags,
     },
   });
 
@@ -121,7 +123,7 @@ export default function ProductForm({
 }
 
 // Re-export types and components
-export { ProductFormData } from './ProductFormSchema';
+export type { ProductFormData } from './ProductFormSchema';
 export { ProductBasicInfo } from './ProductBasicInfo';
 export { ProductPricing } from './ProductPricing';
 export { ProductInventory } from './ProductInventory';

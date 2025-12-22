@@ -1,11 +1,13 @@
-import { Product } from "@/features/products/types/productsType";
+import { ProductListItem } from "@/features/products/types/productsType";
 
 export interface WishlistItem {
   id: string;
   user_id: string;
   product_id: string;
   created_at: string;
-  product: Product;
+  product: ProductListItem & {
+    description?: string | null;
+  };
 }
 
 export interface WishlistResponse {

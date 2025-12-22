@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/shared/lib/api-client';
 import { useAdminRoute } from '@/features/auth/hooks/useAdminRoute';
-import type { Product } from '@/features/products/types/productsType';
+import { AdminProductListItem } from '@/features/admin/types/adminProduct.types';
+
+
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -30,9 +32,9 @@ export default function AdminDashboardPage() {
   }
 
   const totalProducts = products?.length || 0;
-  const inStockProducts = products?.filter((p: Product) => p.stock > 0).length || 0;
-  const outOfStockProducts = products?.filter((p: Product) => p.stock === 0).length || 0;
-  const totalValue = products?.reduce((sum: number, p: Product) => sum + (p.price * p.stock), 0) || 0;
+  const inStockProducts = products?.filter((p: AdminProductListItem) => p.stock > 0).length || 0;
+  const outOfStockProducts = products?.filter((p: AdminProductListItem) => p.stock === 0).length || 0;
+  const totalValue = products?.reduce((sum: number, p: AdminProductListItem) => sum + (p.price * p.stock), 0) || 0;
 
   const quickActions = [
     {
@@ -175,7 +177,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentProducts.map((product: Product) => (
+              {recentProducts.map((product: AdminProductListItem) => (
                 <div
                   key={product.id}
                   className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100"
@@ -191,9 +193,8 @@ export default function AdminDashboardPage() {
                           return `/${url}`;
                         };
                         
-                        // Priority: 1) First uploaded image, 2) thumbnail_url, 3) placeholder
+                        // Priority: thumbnail_url, then placeholder
                         const imageUrl = normalizeUrl(
-                          (product as Product).details?.[0]?.images?.[0] || 
                           product.thumbnail_url || 
                           null
                         );

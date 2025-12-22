@@ -31,11 +31,11 @@ export const productFormSchema = z.object({
   images: z.any().optional(),
   
   // Organization
-  tags: z.array(z.string()).optional().default([]),
+  tags: z.array(z.string()),
   category_id: z.string().optional().nullable(),
   
   // Settings
-  is_public: z.boolean().default(true),
+  is_public: z.boolean(),
 });
 
 export type ProductFormData = z.infer<typeof productFormSchema>;
