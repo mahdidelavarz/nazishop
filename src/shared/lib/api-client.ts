@@ -63,6 +63,9 @@ apiClient.interceptors.response.use(
         };
 
         const { refreshToken, logout } = useAuthStore.getState();
+        
+        console.log('[api-client] Error response:', error.response?.status, 'URL:', originalRequest?.url);
+        console.log('[api-client] Refresh token exists:', !!refreshToken);
 
         // If 401 and we haven't retried yet
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -94,16 +97,20 @@ apiClient.interceptors.response.use(
 
 
             if (!refreshToken) {
+                console.log('[api-client] No refresh token found in store');
                 isRefreshing = false;
                 logout();
                 // Only redirect to login if we're NOT on a public route
                 if (typeof window !== 'undefined') {
                     if (!isPublic && currentPath !== '/login') {
+                        console.log('[api-client] Redirecting to login (no refresh token)');
                         window.location.href = '/login';
                     }
                 }
                 return Promise.reject(error);
             }
+            
+            console.log('[api-client] Attempting to refresh token...');
 
 
             try {

@@ -76,22 +76,22 @@ export async function POST(req: NextRequest) {
       .update({ verified: true })
       .eq('id', otpRecord.id);
 
-    // Check if user exists
-    const { data: existingUser, error: userError } = await supabaseAdmin
+    // Check if user exists by phone_number
+    let { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('phone_number', phone_number)
-      .single();
+      .maybeSingle();
 
     let user = existingUser;
 
     // Create new user if not exists
-    if (userError || !existingUser) {
+    if (!existingUser) {
       const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
         .insert({
           phone_number,
-          role: 'customer',
+          role: 'customer', // New users are always customers
           profile_completed: false,
           created_at: new Date().toISOString(),
         })
@@ -106,6 +106,9 @@ export async function POST(req: NextRequest) {
       }
 
       user = newUser;
+    } else {
+      // User exists - ensure role is preserved (don't overwrite admin)
+      // No updates needed, just use existing user with their role
     }
 
     if (!user) {

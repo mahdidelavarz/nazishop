@@ -20,8 +20,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protected routes
-  const protectedRoutes = ['/profile', '/admin-products', '/wishlist'];
+  // Protected routes (all admin and user-specific routes)
+  const protectedRoutes = [
+    '/profile',
+    '/admin-dashboard',
+    '/admin-products', 
+    '/admin-categories',
+    '/admin-brands',
+    '/admin-orders',
+    '/wishlist',
+    '/cart',
+    '/checkout',
+    '/orders',
+  ];
 
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some((route) =>

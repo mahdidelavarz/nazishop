@@ -55,30 +55,55 @@ export async function GET(request: NextRequest) {
         }
 
         const supabaseUser = authData.user;
+        const googleEmail = supabaseUser.email;
+        const googlePhone = supabaseUser.phone;
+        const fullName =
+            supabaseUser.user_metadata?.full_name ||
+            supabaseUser.user_metadata?.name ||
+            null;
 
-        // Check if user exists in our users table
-        const { data: existingUser } = await supabaseAdmin
+        // Check if user exists by email first
+        let { data: existingUser } = await supabaseAdmin
             .from('users')
             .select('*')
-            .eq('email', supabaseUser.email || '')
-            .single();
+            .eq('email', googleEmail || '')
+            .maybeSingle();
+
+        // If not found by email, check by phone_number (if Google provides it)
+        if (!existingUser && googlePhone) {
+            const { data: userByPhone } = await supabaseAdmin
+                .from('users')
+                .select('*')
+                .eq('phone_number', googlePhone)
+                .maybeSingle();
+            
+            if (userByPhone) {
+                existingUser = userByPhone;
+                // Link the email to existing account if it doesn't have one
+                if (!existingUser.email && googleEmail) {
+                    await supabaseAdmin
+                        .from('users')
+                        .update({ 
+                            email: googleEmail,
+                            role: existingUser.role // Preserve existing role
+                        })
+                        .eq('id', existingUser.id);
+                    existingUser.email = googleEmail;
+                }
+            }
+        }
 
         let user = existingUser;
 
         // Create new user if doesn't exist
         if (!existingUser) {
-            const fullName =
-                supabaseUser.user_metadata?.full_name ||
-                supabaseUser.user_metadata?.name ||
-                null;
-
             const { data: newUser, error: createError } = await supabaseAdmin
                 .from('users')
                 .insert({
-                    email: supabaseUser.email,
-                    phone_number: supabaseUser.phone || null,
+                    email: googleEmail,
+                    phone_number: googlePhone || null,
                     full_name: fullName,
-                    role: 'customer',
+                    role: 'customer', // New users are always customers
                     profile_completed: !!fullName,
                     created_at: new Date(Date.now()).toISOString(),
                 })
@@ -93,19 +118,71 @@ export async function GET(request: NextRequest) {
             }
 
             user = newUser;
+        } else if (user) {
+            // User exists - update missing fields but PRESERVE role
+            const updates: {
+                email?: string;
+                phone_number?: string | null;
+                full_name?: string | null;
+                profile_completed?: boolean;
+                role: 'customer' | 'admin'; // Required by TypeScript, preserve existing value
+            } = {
+                role: user.role as 'customer' | 'admin', // Preserve existing role
+            };
+
+            // Only update email if it's missing
+            if (!user.email && googleEmail) {
+                updates.email = googleEmail;
+            }
+
+            // Only update phone if it's missing
+            if (!user.phone_number && googlePhone) {
+                updates.phone_number = googlePhone;
+            }
+
+            // Update full_name if missing or if Google provides a better one
+            if (!user.full_name && fullName) {
+                updates.full_name = fullName;
+            }
+
+            // Update profile_completed if we now have a name
+            if (fullName && !user.profile_completed) {
+                updates.profile_completed = true;
+            }
+
+            // Only update if there are changes (besides role which is always included)
+            const hasChanges = Object.keys(updates).some(key => key !== 'role');
+            if (hasChanges) {
+                const { data: updatedUser, error: updateError } = await supabaseAdmin
+                    .from('users')
+                    .update(updates)
+                    .eq('id', user.id)
+                    .select()
+                    .single();
+
+                if (!updateError && updatedUser) {
+                    user = updatedUser;
+                }
+            }
         }
 
-        // Generate our own JWT tokens
+        // Generate our own JWT tokens (use actual role from database, never override)
+        if (!user) {
+            return NextResponse.redirect(
+                new URL('/login?error=user_not_found', request.url)
+            );
+        }
+
         const accessTokenJWT = generateAccessToken({
-            userId: user?.id || '',
-            phone_number: user?.phone_number || user?.email || '',
-            role: user?.role || 'customer',
+            userId: user.id,
+            phone_number: user.phone_number || user.email || '',
+            role: user.role, // Use actual role from database (preserves admin role)
         });
 
         const refreshTokenJWT = generateRefreshToken({
-            userId: user?.id || '',
-            phone_number: user?.phone_number || user?.email || '',
-            role: user?.role || 'customer',
+            userId: user.id,
+            phone_number: user.phone_number || user.email || '',
+            role: user.role, // Use actual role from database (preserves admin role)
         });
 
         // Hash and store refresh token (4 months = 120 days, same as OTP login)
