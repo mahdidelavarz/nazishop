@@ -10,10 +10,12 @@ import toast from 'react-hot-toast';
  * Start Google OAuth login flow with implicit grant (tokens in URL)
  */
 async function loginWithGoogle(redirectTo?: string) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+  
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/api/auth/callback${
+      redirectTo: `${appUrl}/api/auth/callback${
         redirectTo ? `?redirectedFrom=${encodeURIComponent(redirectTo)}` : ''
       }`,
       queryParams: {
