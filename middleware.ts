@@ -35,16 +35,17 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Try to verify token, but don't fail if verification fails
-    // Let the page handle token refresh through the API
+    // Verify token - if expired/invalid, let the page handle refresh
+    // The page will call /api/auth/me, get 401, and the interceptor will refresh
     try {
       const payload = verifyAccessToken(accessToken);
       if (!payload) {
-        // Token invalid but let the page handle refresh
-        console.log('Token verification failed in middleware, letting page handle it');
+        // Token invalid/expired - let the page handle refresh via API interceptor
+        // Don't redirect, just let the request through
+        console.log('Token verification failed in middleware, page will handle refresh');
       }
     } catch (error) {
-      // Token verification error, let the page handle it
+      // Token verification error - let the page handle it
       console.log('Token verification error in middleware:', error);
     }
   }

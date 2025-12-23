@@ -108,9 +108,9 @@ export async function GET(request: NextRequest) {
             role: user?.role || 'customer',
         });
 
-        // Hash and store refresh token
+        // Hash and store refresh token (4 months = 120 days, same as OTP login)
         const tokenHash = await bcrypt.hash(refreshTokenJWT, 10);
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 120 * 24 * 60 * 60 * 1000);
 
         await supabaseAdmin.from('refresh_tokens').insert({
             user_id: user?.id || '',
@@ -132,20 +132,22 @@ export async function GET(request: NextRequest) {
 
         const response = NextResponse.redirect(callbackUrl);
 
-        // Set our JWT tokens in cookies
+        // Set access token as httpOnly cookie (1 week, same as OTP login)
         response.cookies.set('accessToken', accessTokenJWT, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 15 * 60,
+            maxAge: 7 * 24 * 60 * 60, // 1 week
             path: '/',
         });
 
+        // Set refresh token as non-httpOnly cookie so client-side JS can read it
+        // The client will store this in Zustand for the refresh flow
         response.cookies.set('refreshToken', refreshTokenJWT, {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60,
+            maxAge: 120 * 24 * 60 * 60, // 4 months
             path: '/',
         });
 

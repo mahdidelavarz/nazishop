@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/shared/lib/supabase/server';
 import { generateAccessToken, generateRefreshToken } from '@/shared/lib/jwt/jwt';
 
-const MAX_ATTEMPTS = 1;
+const MAX_ATTEMPTS = 5; // Allow 5 wrong attempts before lockout
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if OTP is expired
-    if (new Date(otpRecord.expires_at) > new Date(Date.now())) {
+    // Check if OTP is expired (expires_at should be greater than now for valid OTP)
+    if (new Date(otpRecord.expires_at) < new Date(Date.now())) {
       return NextResponse.json(
         { success: false, message: 'کد تایید منقضی شده است' },
         { status: 400 }
