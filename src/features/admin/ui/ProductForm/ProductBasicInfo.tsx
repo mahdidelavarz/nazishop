@@ -3,7 +3,9 @@
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import { Icon } from '@iconify/react';
 import { useEffect } from 'react';
-import { ProductFormData, generateSlug } from './ProductFormSchema';
+import { ProductFormData } from './ProductFormSchema';
+import { useBrandsLookup } from '@/features/brands/hooks/useBrandsLookup';
+import { generateSlug } from '@/shared/utils/slug';
 
 interface ProductBasicInfoProps {
   register: UseFormRegister<ProductFormData>;
@@ -21,6 +23,8 @@ export function ProductBasicInfo({
   isEditMode = false,
 }: ProductBasicInfoProps) {
   const titleValue = watch('title');
+  const brandValue = watch('brand');
+  const { data: brands = [], isLoading: brandsLoading } = useBrandsLookup();
 
   // Auto-generate slug from title (only in create mode)
   useEffect(() => {
@@ -90,11 +94,30 @@ export function ProductBasicInfo({
             <Icon icon="solar:star-bold-duotone" className="w-4 h-4 text-pink-500" />
             برند
           </label>
-          <input
-            {...register('brand')}
-            className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all outline-none hover:border-gray-300"
-            placeholder="مثال: L'Oréal"
-          />
+          {brandsLoading ? (
+            <div className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl bg-gray-50 flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-500">در حال بارگذاری برندها...</span>
+            </div>
+          ) : (
+            <select
+              {...register('brand')}
+              className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all outline-none hover:border-gray-300 bg-white"
+            >
+              <option value="">انتخاب برند (اختیاری)</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.name}>
+                  {brand.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {brandValue && (
+            <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+              <Icon icon="solar:check-circle-bold-duotone" className="w-3 h-3 text-green-500" />
+              برند انتخاب شده: {brandValue}
+            </p>
+          )}
         </div>
 
         {/* SKU */}

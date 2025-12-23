@@ -1,5 +1,6 @@
 // Product Form Schema and Types
 import * as z from 'zod';
+import { generateSlug } from '@/shared/utils/slug';
 
 export const productFormSchema = z.object({
   // Basic Info
@@ -55,15 +56,8 @@ export const defaultFormValues: ProductFormData = {
   is_public: true,
 };
 
-// Helper to generate slug from title
-export const generateSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-};
+// Re-export generateSlug for convenience (now imported from shared utils)
+export { generateSlug };
 
 // Helper to calculate discount percent
 export const calculateDiscountPercent = (

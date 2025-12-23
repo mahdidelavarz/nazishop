@@ -52,6 +52,20 @@ export default function AdminDashboardPage() {
       action: () => router.push('/admin-products/new'),
     },
     {
+      title: 'مدیریت دسته‌بندی‌ها',
+      description: 'مشاهده، ویرایش و حذف دسته‌بندی‌ها',
+      icon: '📁',
+      color: 'from-pink-500 to-rose-500',
+      action: () => router.push('/admin-categories'),
+    },
+    {
+      title: 'مدیریت برندها',
+      description: 'مشاهده، ویرایش و حذف برندها',
+      icon: '⭐',
+      color: 'from-blue-500 to-cyan-500',
+      action: () => router.push('/admin-brands'),
+    },
+    {
       title: 'سفارشات',
       description: 'مدیریت سفارشات مشتریان',
       icon: '🛒',
