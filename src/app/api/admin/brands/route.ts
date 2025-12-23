@@ -139,7 +139,7 @@ export async function PUT(req: NextRequest) {
     // Check if brand exists
     const { data: existing } = await supabaseAdmin
       .from('brands')
-      .select('id')
+      .select('id, name')
       .eq('id', id)
       .single();
 
