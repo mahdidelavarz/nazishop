@@ -33,7 +33,7 @@ export default function CallbackPage() {
 function CallbackPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setUser, setRefreshToken } = useAuthStore();
+  const { setUser } = useAuthStore();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -46,21 +46,8 @@ function CallbackPageContent() {
       }
 
       try {
-        // Get refresh token from cookie (set by API route)
-        const refreshTokenCookie = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('refreshToken='));
-
-        if (refreshTokenCookie) {
-          const refreshToken = refreshTokenCookie.split('=')[1];
-
-          // Save refresh token to Zustand
-          setRefreshToken(refreshToken);
-
-          // Delete the refresh token cookie (we only needed it temporarily)
-          document.cookie =
-            'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        }
+        // Refresh token is now in httpOnly cookie (set by API route)
+        // No need to read it client-side - server will use it automatically
 
         // Fetch user data
         const response = await apiClient.get('/auth/me');
@@ -80,7 +67,7 @@ function CallbackPageContent() {
     };
 
     handleCallback();
-  }, [searchParams, router, setUser, setRefreshToken]);
+  }, [searchParams, router, setUser]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

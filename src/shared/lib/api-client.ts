@@ -62,10 +62,10 @@ apiClient.interceptors.response.use(
             _retry?: boolean;
         };
 
-        const { refreshToken, logout } = useAuthStore.getState();
+        const { logout } = useAuthStore.getState();
         
         console.log('[api-client] Error response:', error.response?.status, 'URL:', originalRequest?.url);
-        console.log('[api-client] Refresh token exists:', !!refreshToken);
+        console.log('[api-client] Refresh token is now in httpOnly cookie (not accessible to JS)');
 
         // If 401 and we haven't retried yet
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -94,41 +94,41 @@ apiClient.interceptors.response.use(
 
             originalRequest._retry = true;
             isRefreshing = true;
-
-
-            if (!refreshToken) {
-                console.log('[api-client] No refresh token found in store');
-                isRefreshing = false;
-                logout();
-                // Only redirect to login if we're NOT on a public route
-                if (typeof window !== 'undefined') {
-                    if (!isPublic && currentPath !== '/login') {
-                        console.log('[api-client] Redirecting to login (no refresh token)');
-                        window.location.href = '/login';
-                    }
-                }
-                return Promise.reject(error);
-            }
             
             console.log('[api-client] Attempting to refresh token...');
-
+            console.log('[api-client] Refresh token will be read from httpOnly cookie by server');
 
             try {
                 // Try to refresh the access token
+                // Refresh token is in httpOnly cookie, so we don't send it in body
+                // Server will read it from cookies automatically
                 const response = await axios.post(
                     '/api/auth/refresh',
-                    { refreshToken },
-                    { withCredentials: true }
+                    {}, // No body needed - token is in cookie
+                    { withCredentials: true } // Important: sends cookies
                 );
 
+                console.log('[api-client] Refresh response:', response.data.success ? 'SUCCESS' : 'FAILED');
                 if (response.data.success) {
+                    console.log('[api-client] Token refreshed successfully, retrying original request');
                     processQueue(null);
                     isRefreshing = false;
                     return apiClient(originalRequest);
                 } else {
+                    console.log('[api-client] Refresh returned success:false');
                     throw new Error('Refresh failed');
                 }
-            } catch (refreshError) {
+            } catch (refreshError: unknown) {
+                console.error('[api-client] Refresh error:', refreshError);
+                if (refreshError instanceof Error) {
+                    console.error('[api-client] Refresh error message:', refreshError.message);
+                }
+                if (axios.isAxiosError(refreshError)) {
+                    console.error('[api-client] Refresh error response:', {
+                        status: refreshError.response?.status,
+                        data: refreshError.response?.data,
+                    });
+                }
                 processQueue(refreshError, null);
                 isRefreshing = false;
                 logout();

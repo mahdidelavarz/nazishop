@@ -218,12 +218,11 @@ export async function GET(request: NextRequest) {
             path: '/',
         });
 
-        // Set refresh token as non-httpOnly cookie so client-side JS can read it
-        // The client will store this in Zustand for the refresh flow
+        // Set refresh token as httpOnly cookie (more secure than localStorage)
         response.cookies.set('refreshToken', refreshTokenJWT, {
-            httpOnly: false,
+            httpOnly: true, // Not accessible to JavaScript (XSS protection)
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict', // CSRF protection
             maxAge: 120 * 24 * 60 * 60, // 4 months
             path: '/',
         });

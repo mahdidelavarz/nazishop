@@ -24,7 +24,7 @@ export function useAdminRoute() {
       try {
         console.log('[useAdminRoute] Checking auth...');
         console.log('[useAdminRoute] Current user in store:', useAuthStore.getState().user);
-        console.log('[useAdminRoute] Refresh token exists:', !!useAuthStore.getState().refreshToken);
+        console.log('[useAdminRoute] Refresh token is in httpOnly cookie (not accessible to JS)');
         
         // Always fetch fresh user data to ensure role is current
         const response = await apiClient.get('/auth/me');

@@ -7,14 +7,14 @@ import { AuthState } from '../types/auth.type';
 
 /**
  * Zustand store for authentication state
- * - Persists refreshToken to localStorage
+ * - Refresh token is now stored in httpOnly cookie (more secure)
  * - Manages user data and authentication status
  */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      refreshToken: null,
+      refreshToken: null, // Deprecated: kept for backward compatibility, but not used
       isAuthenticated: false,
 
       setUser: (user) =>
@@ -23,10 +23,11 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: !!user,
         }),
 
-      setRefreshToken: (token) =>
-        set({
-          refreshToken: token,
-        }),
+      setRefreshToken: (token) => {
+        // Deprecated: Refresh token is now in httpOnly cookie
+        // This function is kept for backward compatibility but does nothing
+        console.warn('[AuthStore] setRefreshToken is deprecated - refresh token is now in httpOnly cookie');
+      },
 
       logout: () =>
         set({
@@ -38,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage', // localStorage key
       partialize: (state) => ({
-        refreshToken: state.refreshToken, // Only persist refreshToken
+        // Don't persist refreshToken anymore - it's in httpOnly cookie
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),

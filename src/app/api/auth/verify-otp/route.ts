@@ -18,28 +18,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find the latest unverified OTP
+    // Find the latest unverified OTP that hasn't expired
+    // Use database-level comparison to avoid timezone issues
+    const nowISO = new Date().toISOString();
+    
     const { data: otpRecord, error: otpError } = await supabaseAdmin
       .from('otp_codes')
       .select('*')
       .eq('phone_number', phone_number)
       .eq('verified', false)
+      .gte('expires_at', nowISO) // Only get OTPs that haven't expired (expires_at >= now)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
     if (otpError || !otpRecord) {
+      // Check if OTP exists but expired
+      const { data: expiredOTP } = await supabaseAdmin
+        .from('otp_codes')
+        .select('expires_at')
+        .eq('phone_number', phone_number)
+        .eq('verified', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (expiredOTP) {
+        return NextResponse.json(
+          { success: false, message: 'کد تایید منقضی شده است' },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { success: false, message: 'کد تایید یافت نشد' },
         { status: 404 }
-      );
-    }
-
-    // Check if OTP is expired (expires_at should be greater than now for valid OTP)
-    if (new Date(otpRecord.expires_at) < new Date(Date.now())) {
-      return NextResponse.json(
-        { success: false, message: 'کد تایید منقضی شده است' },
-        { status: 400 }
       );
     }
 
@@ -154,8 +167,8 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'ورود موفقیت‌آمیز',
       user,
-      refreshToken,
       requiresProfileCompletion: user.profile_completed,
+      // Don't return refreshToken - it's now in httpOnly cookie
     });
 
     response.cookies.set('accessToken', accessToken, {
@@ -163,6 +176,15 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60, // 1 week
+      path: '/',
+    });
+
+    // Set refresh token as httpOnly cookie (more secure than localStorage)
+    response.cookies.set('refreshToken', refreshToken, {
+      httpOnly: true, // Not accessible to JavaScript (XSS protection)
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict', // CSRF protection
+      maxAge: 120 * 24 * 60 * 60, // 4 months
       path: '/',
     });
 

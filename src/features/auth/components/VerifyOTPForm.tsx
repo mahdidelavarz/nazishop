@@ -33,7 +33,7 @@ export default function VerifyOTPForm({
   onBack,
 }: VerifyOTPFormProps) {
   const router = useRouter();
-  const { setUser, setRefreshToken } = useAuthStore();
+  const { setUser } = useAuthStore();
   const [timer, setTimer] = useState(120);
   const searchParams = useSearchParams();
   const redirectedFrom = searchParams.get('redirectedFrom') || '/';
@@ -67,7 +67,8 @@ export default function VerifyOTPForm({
     onSuccess: (data) => {
       toast.success(data.message);
       setUser(data.user);
-      setRefreshToken(data.refreshToken);
+      // Refresh token is now in httpOnly cookie (set by server)
+      // No need to store it client-side
       // Always redirect to profile page after login
       // Profile page will handle showing completion form or profile details
       if (!data.user.profile_completed) {

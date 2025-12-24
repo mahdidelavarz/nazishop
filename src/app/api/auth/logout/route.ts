@@ -22,13 +22,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Clear access token cookie
+    // Clear access token and refresh token cookies
     const response = NextResponse.json({
       success: true,
       message: 'خروج موفقیت‌آمیز',
     });
 
     response.cookies.delete('accessToken');
+    response.cookies.delete('refreshToken'); // Clear refresh token cookie
 
     return response;
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { checkAuthState } from "@/shared/lib/auth-check";
 
 /**
  * AuthInitProvider - Initializes authentication state once at root level
@@ -15,6 +16,10 @@ export default function AuthInitProvider({ children }: { children: React.ReactNo
     // Initialize auth only once on mount
     if (!hasInitialized.current) {
       hasInitialized.current = true;
+      
+      // Diagnostic: Check auth state before initializing
+      checkAuthState();
+      
       initializeUser();
     }
   }, [initializeUser]);
