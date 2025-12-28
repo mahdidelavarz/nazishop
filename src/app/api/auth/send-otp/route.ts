@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
     // Send OTP via SMS (ignore errors in development)
     try {
       await sendOTPSMS(phone_number, otpCode);
-    } catch (error) {
-      console.log('SMS send failed (ignored for testing):', error);
+    } catch {
+      // SMS send failed - ignored for development/testing
     }
 
     // Return OTP code in response for testing purposes

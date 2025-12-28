@@ -31,29 +31,11 @@ if (process.env.JWT_ACCESS_EXPIRES_IN) {
   }
 }
 
-// Log expiry settings on module load (for debugging)
-console.log('[JWT Config] Access token expires:', ACCESS_EXPIRES);
-console.log('[JWT Config] Refresh token expires:', REFRESH_EXPIRES);
-
-
 /**
  * Generate Access Token (short-lived, stored in httpOnly cookie)
  */
 export function generateAccessToken(payload: JWTPayload): string {
-  const token = jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES } as jwt.SignOptions);
-  
-  // Debug: Log token expiry info
-  const decoded = jwt.decode(token) as JWTPayload & { exp?: number };
-  if (decoded?.exp) {
-    const expiryDate = new Date(decoded.exp * 1000);
-    console.log('[JWT Debug] Generated access token:', {
-      expiresAt: expiryDate.toISOString(),
-      expiresIn: ACCESS_EXPIRES,
-      userId: payload.userId,
-    });
-  }
-  
-  return token;
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES } as jwt.SignOptions);
 }
 
 /**
@@ -68,40 +50,8 @@ export function generateRefreshToken(payload: JWTPayload): string {
  */
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
-    // Decode first to check expiry details
-    const decoded = jwt.decode(token) as JWTPayload & { exp?: number; iat?: number };
-    
-    if (decoded && decoded.exp) {
-      const expiryDate = new Date(decoded.exp * 1000);
-      const now = new Date();
-      const timeUntilExpiry = expiryDate.getTime() - now.getTime();
-      const hoursUntilExpiry = timeUntilExpiry / (1000 * 60 * 60);
-      
-      console.log('[JWT Debug] Token expiry:', {
-        expiresAt: expiryDate.toISOString(),
-        now: now.toISOString(),
-        hoursUntilExpiry: hoursUntilExpiry.toFixed(2),
-        isExpired: timeUntilExpiry < 0,
-      });
-    }
-    
     return jwt.verify(token, ACCESS_SECRET) as JWTPayload;
-  } catch (error: unknown) {
-    if (error instanceof jwt.TokenExpiredError) {
-      const decoded = jwt.decode(token) as JWTPayload & { exp?: number };
-      if (decoded?.exp) {
-        const expiryDate = new Date(decoded.exp * 1000);
-        const now = new Date();
-        console.error('[JWT Error] Token expired:', {
-          expiredAt: expiryDate.toISOString(),
-          currentTime: now.toISOString(),
-          expiredBy: ((now.getTime() - expiryDate.getTime()) / (1000 * 60 * 60)).toFixed(2) + ' hours',
-          configuredExpiry: ACCESS_EXPIRES,
-        });
-      }
-    } else {
-      console.error('Access token verification failed:', error);
-    }
+  } catch {
     return null;
   }
 }
@@ -112,8 +62,7 @@ export function verifyAccessToken(token: string): JWTPayload | null {
 export function verifyRefreshToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, REFRESH_SECRET) as JWTPayload;
-  } catch (error: unknown) {
-    console.error('Refresh token verification failed:', error);
+  } catch {
     return null;
   }
 }

@@ -11,7 +11,6 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   const { response } = await requireAdmin(req);
   if (response) {
-    console.error('Brand upload route: Admin auth failed', response.status);
     return response;
   }
 
@@ -20,7 +19,6 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File;
 
     if (!file || !(file instanceof File)) {
-      console.error('Brand upload route: No file received');
       return NextResponse.json(
         { success: false, message: 'هیچ فایلی ارسال نشده است' },
         { status: 400 }
@@ -68,13 +66,6 @@ export async function POST(req: NextRequest) {
     const { data: { publicUrl } } = supabaseAdmin.storage
       .from(bucket)
       .getPublicUrl(data.path);
-
-    console.log('Uploaded brand logo URL:', {
-      path: data.path,
-      publicUrl,
-      fileName: file.name,
-      bucket,
-    });
 
     return NextResponse.json({
       success: true,

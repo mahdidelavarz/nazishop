@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Logo } from './Logo';
-import { SearchBar } from './SearchBar';
-import { UserMenu } from './UserMenu';
+import { SearchBar } from '../../ui/header/SearchBar';
+import { UserMenu } from '../../ui/header/UserMenu';
 import { User } from '@/features/auth/types/auth.type';
 
 interface MobileHeaderProps {

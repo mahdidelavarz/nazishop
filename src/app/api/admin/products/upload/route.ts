@@ -12,7 +12,6 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   const { response } = await requireAdmin(req);
   if (response) {
-    console.error('Upload route: Admin auth failed', response.status);
     return response; // 401 or 403
   }
 
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
     const files = formData.getAll('files') as File[];
 
     if (!files || files.length === 0) {
-      console.error('Upload route: No files received');
       return NextResponse.json(
         { success: false, message: 'هیچ فایلی ارسال نشده است' },
         { status: 400 }
@@ -74,14 +72,6 @@ export async function POST(req: NextRequest) {
       const { data: { publicUrl } } = supabaseAdmin.storage
         .from(bucket)
         .getPublicUrl(data.path);
-
-      // Also try to get signed URL if public doesn't work (but public is preferred for images)
-      console.log('Uploaded image URL:', {
-        path: data.path,
-        publicUrl,
-        fileName: file.name,
-        bucket,
-      });
 
       uploadedUrls.push(publicUrl);
     }

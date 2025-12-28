@@ -49,15 +49,10 @@ export function middleware(request: NextRequest) {
     // Verify token - if expired/invalid, let the page handle refresh
     // The page will call /api/auth/me, get 401, and the interceptor will refresh
     try {
-      const payload = verifyAccessToken(accessToken);
-      if (!payload) {
-        // Token invalid/expired - let the page handle refresh via API interceptor
-        // Don't redirect, just let the request through
-        console.log('Token verification failed in middleware, page will handle refresh');
-      }
-    } catch (error) {
+      verifyAccessToken(accessToken);
+      // Token valid or invalid - let the page handle refresh if needed
+    } catch {
       // Token verification error - let the page handle it
-      console.log('Token verification error in middleware:', error);
     }
   }
 
@@ -68,7 +63,7 @@ export function middleware(request: NextRequest) {
       if (payload) {
         return NextResponse.redirect(new URL('/', request.url));
       }
-    } catch (error) {
+    } catch {
       // Invalid token, allow access to login page
       const response = NextResponse.next();
       response.cookies.delete('accessToken');

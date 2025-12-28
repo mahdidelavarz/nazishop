@@ -1,11 +1,13 @@
 "use client";
 
 import { Icon } from "@iconify/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useCategories } from "@/features/categories/hooks/useCategories";
 import { useBrands } from "@/features/brands/hooks/useBrands";
+import { useProductsQuery } from "@/features/products/hooks/useProducts";
 
 export default function HomePage() {
   const { user, isAuthenticated } = useAuth();
@@ -13,6 +15,14 @@ export default function HomePage() {
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
   const { data: brands = [], isLoading: brandsLoading } = useBrands();
+  const { data: allProducts = [], isLoading: productsLoading } = useProductsQuery();
+
+  // Filter products with discounts and take first 5
+  const discountProducts = useMemo(() => {
+    return allProducts
+      .filter((product) => product.discount_percent && product.discount_percent > 0)
+      .slice(0, 5);
+  }, [allProducts]);
 
   const heroSlides = [
     {
@@ -47,64 +57,6 @@ export default function HomePage() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
-
-  const discountProducts = [
-    {
-      id: 1,
-      name: "رژ لب مایع مات",
-      brand: "Maybelline",
-      price: "450,000",
-      originalPrice: "750,000",
-      discount: "40%",
-      image:
-        "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400&h=400&fit=crop",
-      rating: 4.5,
-    },
-    {
-      id: 2,
-      name: "ریمل حجم دهنده",
-      brand: "L'Oréal",
-      price: "380,000",
-      originalPrice: "550,000",
-      discount: "30%",
-      image:
-        "https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=400&h=400&fit=crop",
-      rating: 4.8,
-    },
-    {
-      id: 3,
-      name: "کرم آبرسان",
-      brand: "Neutrogena",
-      price: "520,000",
-      originalPrice: "800,000",
-      discount: "35%",
-      image:
-        "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop",
-      rating: 4.7,
-    },
-    {
-      id: 4,
-      name: "عطر زنانه",
-      brand: "Chanel",
-      price: "2,500,000",
-      originalPrice: "3,500,000",
-      discount: "28%",
-      image:
-        "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&h=400&fit=crop",
-      rating: 5.0,
-    },
-    {
-      id: 5,
-      name: "پالت سایه چشم",
-      brand: "MAC",
-      price: "890,000",
-      originalPrice: "1,200,000",
-      discount: "25%",
-      image:
-        "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&h=400&fit=crop",
-      rating: 4.6,
-    },
-  ];
 
 
   return (
@@ -310,64 +262,126 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {discountProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:scale-105"
-              >
-                {/* Product Image */}
-                <div className="relative aspect-square overflow-hidden bg-gray-100">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                    {product.discount}
-                  </div>
-                  <button className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white">
-                    <Icon
-                      icon="ph:heart-duotone"
-                      width={20}
-                      className="text-pink-600"
-                    />
-                  </button>
-                </div>
-
-                {/* Product Info */}
-                <div className="p-5">
-                  <p className="text-xs text-gray-500 mb-1">{product.brand}</p>
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
-                    {product.name}
-                  </h3>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 mb-3">
-                    <Icon
-                      icon="ph:star-fill"
-                      className="text-yellow-400"
-                      width={16}
-                    />
-                    <span className="text-sm text-gray-600">
-                      {product.rating}
-                    </span>
-                  </div>
-
-                  {/* Price */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-pink-600">
-                      {product.price} تومان
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-400 line-through">
-                    {product.originalPrice} تومان
+          {productsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm animate-pulse"
+                >
+                  <div className="aspect-square bg-gray-200" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-6 bg-gray-200 rounded" />
+                    <div className="h-4 bg-gray-200 rounded w-1/3" />
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : discountProducts.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Icon
+                icon="ph:package-duotone"
+                className="text-gray-400 mx-auto mb-4"
+                width={64}
+              />
+              <p>در حال حاضر محصولی با تخفیف موجود نیست</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              {discountProducts.map((product) => {
+                const finalPrice = product.discount_percent
+                  ? product.price * (1 - product.discount_percent / 100)
+                  : product.price;
+                const originalPrice = product.original_price || product.price;
+                const thumbnailUrl =
+                  product.thumbnail_url && product.thumbnail_url.trim().length > 0
+                    ? product.thumbnail_url.startsWith("http")
+                      ? product.thumbnail_url
+                      : product.thumbnail_url.startsWith("/")
+                      ? product.thumbnail_url
+                      : `/${product.thumbnail_url}`
+                    : null;
+
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.slug}`}
+                    className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all hover:scale-105"
+                  >
+                    {/* Product Image */}
+                    <div className="relative aspect-square overflow-hidden bg-gray-100">
+                      {thumbnailUrl ? (
+                        <Image
+                          src={thumbnailUrl}
+                          alt={product.title}
+                          width={400}
+                          height={400}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <Icon
+                            icon="ph:image-duotone"
+                            className="text-gray-400"
+                            width={48}
+                          />
+                        </div>
+                      )}
+                      {product.discount_percent && (
+                        <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                          {Math.round(product.discount_percent)}%
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="p-5">
+                      {product.brand && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          {product.brand}
+                        </p>
+                      )}
+                      <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
+                        {product.title}
+                      </h3>
+
+                      {/* Rating */}
+                      {product.rating > 0 && (
+                        <div className="flex items-center gap-1 mb-3">
+                          <Icon
+                            icon="ph:star-fill"
+                            className="text-yellow-400"
+                            width={16}
+                          />
+                          <span className="text-sm text-gray-600">
+                            {product.rating.toFixed(1)}
+                          </span>
+                          {product.reviews_count > 0 && (
+                            <span className="text-xs text-gray-400">
+                              ({product.reviews_count})
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Price */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-pink-600">
+                          {finalPrice.toLocaleString("fa-IR")} تومان
+                        </span>
+                      </div>
+                      {product.discount_percent && originalPrice > finalPrice && (
+                        <div className="text-xs text-gray-400 line-through">
+                          {originalPrice.toLocaleString("fa-IR")} تومان
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 

@@ -9,8 +9,8 @@ interface NavLinksProps {
 
 export function NavLinks({ mobile = false }: NavLinksProps) {
   const navItems = [
-    { href: '/products', label: 'محصولات', icon: 'ph:package-duotone', badge: 'جدید' },
     { href: '/categories', label: 'دسته‌بندی', icon: 'ph:squares-four-duotone' },
+    { href: '/products', label: 'محصولات', icon: 'ph:package-duotone' },
     { href: '/brands', label: 'برندها', icon: 'ph:star-duotone' },
     { href: '/offers', label: 'پیشنهادات', icon: 'ph:percent-duotone', highlight: true },
     { href: '/blog', label: 'مجله', icon: 'ph:newspaper-duotone' },
@@ -32,11 +32,6 @@ export function NavLinks({ mobile = false }: NavLinksProps) {
         >
           <Icon icon={item.icon} width={18} />
           <span>{item.label}</span>
-          {item.badge && !item.highlight && (
-            <span className="absolute -top-1 -right-1 bg-error text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">
-              {item.badge}
-            </span>
-          )}
         </Link>
       ))}
     </nav>

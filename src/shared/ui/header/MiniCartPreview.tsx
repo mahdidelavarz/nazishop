@@ -24,7 +24,7 @@ export function MiniCartPreview({ show, items, itemCount }: MiniCartPreviewProps
   }, 0);
 
   return (
-    <div className="absolute left-0 top-full mt-2 w-80 bg-card rounded-2xl shadow-2xl border border-border z-50 max-h-[500px] flex flex-col">
+    <div className="absolute left-0 top-12 mt-2 w-80 bg-card rounded-2xl shadow-2xl border border-border z-50 max-h-[500px] flex flex-col">
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm">سبد خرید شما</h3>
