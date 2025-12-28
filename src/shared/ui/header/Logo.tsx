@@ -12,7 +12,7 @@ export function Logo({ mobile = false }: LogoProps) {
         <div
           className={`${
             mobile ? 'w-9 h-9' : 'w-10 h-10'
-          } bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-primary-300 transition-all group-hover:scale-105`}
+          } bg-gradient-to-br from-primary-500 to-primary-400 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-primary-300 transition-all group-hover:scale-105`}
         >
           <Icon icon="mdi:lipstick" className="text-white" width={mobile ? 20 : 22} />
         </div>

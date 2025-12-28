@@ -20,7 +20,7 @@ export function PromoBar() {
   }, [promos.length]);
 
   return (
-    <div className="bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 text-white py-2 overflow-hidden">
+    <div className="bg-gradient-to-r from-primary-300 via-primary-500 to-primary-200 text-white py-2 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center gap-2 text-xs font-medium">
           <Icon icon={promos[currentPromo].icon} width={16} />
