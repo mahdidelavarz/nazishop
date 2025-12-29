@@ -24,14 +24,24 @@ export function NavLinks({ mobile = false }: NavLinksProps) {
         <Link
           key={item.href}
           href={item.href}
-          className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all overflow-hidden ${
             item.highlight
-              ? 'bg-gradient-to-r from-accent-500 to-primary-500 text-white hover:shadow-md hover:shadow-accent-200'
+              ? 'text-white shadow-[0_2px_12px_rgba(168,85,247,0.25)] hover:shadow-[0_3px_16px_rgba(168,85,247,0.35)]'
               : 'text-foreground hover:bg-gradient-to-r hover:from-primary-50 hover:to-accent-50 hover:text-primary-600 dark:hover:from-primary-950 dark:hover:to-accent-950'
           }`}
         >
-          <Icon icon={item.icon} width={18} />
-          <span>{item.label}</span>
+          {item.highlight && (
+            <>
+              {/* Base gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-400 via-accent-200 to-primary-400" />
+              
+              {/* Depth layers */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
+            </>
+          )}
+          <Icon icon={item.icon} width={18} className="relative z-10" />
+          <span className="relative z-10">{item.label}</span>
         </Link>
       ))}
     </nav>
