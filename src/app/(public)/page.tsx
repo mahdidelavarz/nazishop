@@ -15,12 +15,15 @@ export default function HomePage() {
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
   const { data: brands = [], isLoading: brandsLoading } = useBrands();
-  const { data: allProducts = [], isLoading: productsLoading } = useProductsQuery();
+  const { data: allProducts = [], isLoading: productsLoading } =
+    useProductsQuery();
 
   // Filter products with discounts and take first 5
   const discountProducts = useMemo(() => {
     return allProducts
-      .filter((product) => product.discount_percent && product.discount_percent > 0)
+      .filter(
+        (product) => product.discount_percent && product.discount_percent > 0
+      )
       .slice(0, 5);
   }, [allProducts]);
 
@@ -29,25 +32,22 @@ export default function HomePage() {
       title: "کلکسیون بهار",
       subtitle: "جدیدترین رنگ‌های رژلب",
       discount: "40%",
-      image:
-        "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1200&h=800&fit=crop",
-      gradient: "from-pink-500/90 to-rose-500/90",
+      image: "/images/pexels-noratopicals-7038233.jpg",
+      // gradient: "from-pink-500/90 to-rose-500/90",
     },
     {
       title: "عطرهای لوکس",
       subtitle: "برندهای معتبر جهانی",
       discount: "30%",
-      image:
-        "https://images.unsplash.com/photo-1541643600914-78b084683601?w=1200&h=800&fit=crop",
-      gradient: "from-purple-500/90 to-pink-500/90",
+      image: "/images/441824c52072304ee1e81efcbde20169.jpg",
+      // gradient: "from-purple-500/90 to-pink-500/90",
     },
     {
       title: "مراقبت پوست",
       subtitle: "محصولات ارگانیک و طبیعی",
       discount: "50%",
-      image:
-        "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&h=800&fit=crop",
-      gradient: "from-emerald-500/90 to-teal-500/90",
+      image: "/images/b213e892f2322d5b2132e138e65b490c.jpg",
+      // gradient: "from-emerald-500/90 to-teal-500/90",
     },
   ];
 
@@ -57,7 +57,6 @@ export default function HomePage() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
-
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50">
@@ -71,14 +70,15 @@ export default function HomePage() {
             }`}
           >
             {/* Background Image */}
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${slide.image})` }}
-            />
+              {/* <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${slide.image})` }}
+              /> */}
+            <img src={slide.image} alt={slide.title} className="absolute inset-0 w-full h-full object-fill" />
 
             {/* Overlay Gradient */}
             <div
-              className={`absolute inset-0 bg-gradient-to-l ${slide.gradient}`}
+              className={`absolute inset-0 bg-gradient-to-l`}
             />
 
             {/* Content */}
@@ -295,7 +295,8 @@ export default function HomePage() {
                   : product.price;
                 const originalPrice = product.original_price || product.price;
                 const thumbnailUrl =
-                  product.thumbnail_url && product.thumbnail_url.trim().length > 0
+                  product.thumbnail_url &&
+                  product.thumbnail_url.trim().length > 0
                     ? product.thumbnail_url.startsWith("http")
                       ? product.thumbnail_url
                       : product.thumbnail_url.startsWith("/")
@@ -371,11 +372,12 @@ export default function HomePage() {
                           {finalPrice.toLocaleString("fa-IR")} تومان
                         </span>
                       </div>
-                      {product.discount_percent && originalPrice > finalPrice && (
-                        <div className="text-xs text-gray-400 line-through">
-                          {originalPrice.toLocaleString("fa-IR")} تومان
-                        </div>
-                      )}
+                      {product.discount_percent &&
+                        originalPrice > finalPrice && (
+                          <div className="text-xs text-gray-400 line-through">
+                            {originalPrice.toLocaleString("fa-IR")} تومان
+                          </div>
+                        )}
                     </div>
                   </Link>
                 );
@@ -455,7 +457,11 @@ export default function HomePage() {
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
-                  href={brand.slug ? `/brands/${brand.slug}` : `/brands/${brand.name}`}
+                  href={
+                    brand.slug
+                      ? `/brands/${brand.slug}`
+                      : `/brands/${brand.name}`
+                  }
                   className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center aspect-video"
                 >
                   {brand.logo ? (
@@ -465,7 +471,9 @@ export default function HomePage() {
                       className="max-w-full max-h-full object-contain opacity-60 hover:opacity-100 transition-opacity"
                     />
                   ) : (
-                    <span className="text-gray-400 font-medium">{brand.name}</span>
+                    <span className="text-gray-400 font-medium">
+                      {brand.name}
+                    </span>
                   )}
                 </Link>
               ))}

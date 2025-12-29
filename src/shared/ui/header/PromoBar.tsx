@@ -20,11 +20,19 @@ export function PromoBar() {
   }, [promos.length]);
 
   return (
-    <div className="bg-gradient-to-r from-primary-300 via-primary-500 to-primary-200 text-white py-2 overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-center gap-2 text-xs font-medium">
-          <Icon icon={promos[currentPromo].icon} width={16} />
-          <span className="animate-fade-in">{promos[currentPromo].text}</span>
+    <div className="relative overflow-hidden">
+      {/* Base gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-accent-200 to-primary-400" />
+      
+      {/* Depth layers */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-white/20" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
+      
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-4 py-2">
+        <div className="flex items-center justify-center gap-2 text-xs font-medium text-white">
+          <Icon icon={promos[currentPromo].icon} width={16} className="relative z-10" />
+          <span className="animate-fade-in relative z-10">{promos[currentPromo].text}</span>
         </div>
       </div>
     </div>
