@@ -5,40 +5,40 @@ html {
 }
 
 @theme {
-  /* Light Theme - Astro Dreamy Lavender & Slate */
-  --color-background: #f4f0f9; /* Very light lavender mist */
-  --color-foreground: #3b2d4a; /* Deep slate purple for text */
+  /* Light Theme - Soft Light Pink */
+  --color-background: #fef7f7; /* Very light pink mist */
+  --color-foreground: #4a2d3b; /* Deep rose for text */
 
-  /* Primary: Astro Lavender - The soft purple from the packaging */
-  --color-primary-50: #f8f5ff;
-  --color-primary-100: #f0e7ff;
-  --color-primary-200: #e2d1f9; /* Signature Astro Lavender */
-  --color-primary-300: #cbb2f4;
-  --color-primary-400: #b18cf0;
-  --color-primary-500: #9367e9; /* Mid-tone for buttons */
-  --color-primary-600: #7c4ee0;
-  --color-primary-700: #663bc2;
-  --color-primary-800: #5431a0;
-  --color-primary-900: #462985;
+  /* Primary: Soft Pink - Gentle pink shades */
+  --color-primary-50: #fef2f2;
+  --color-primary-100: #fce7e7;
+  --color-primary-200: #f9d1d1; /* Signature Light Pink */
+  --color-primary-300: #f4b4b4;
+  --color-primary-400: #ec9090;
+  --color-primary-500: #e47272; /* Mid-tone for buttons */
+  --color-primary-600: #d85a5a;
+  --color-primary-700: #c24545;
+  --color-primary-800: #a83838;
+  --color-primary-900: #8b2e2e;
 
-  /* Secondary: Cosmic Slate - The blue-ish purples from the "Midnight" text */
-  --color-secondary-50: #f2f4f8;
-  --color-secondary-500: #6e7b91; /* Muted slate blue-grey */
-  --color-secondary-900: #2d3648;
+  /* Secondary: Rose Blush - Soft rose tones */
+  --color-secondary-50: #faf5f7;
+  --color-secondary-500: #c98ba3; /* Muted rose pink */
+  --color-secondary-900: #6b3d4f;
 
-  /* Accent: Champagne Gold - For the luxurious trim in the dark image */
-  --color-accent-500: #c5a47e; /* Soft metallic gold */
-  --color-accent-600: #b08d66;
+  /* Accent: Coral Pink - For highlights and CTAs */
+  --color-accent-500: #f4a5a5; /* Soft coral pink */
+  --color-accent-600: #e88a8a;
 
-  /* Neutral: Clean Purples */
-  --color-neutral-100: #f9f7fc;
-  --color-neutral-200: #efedf5;
-  --color-neutral-900: #120b18;
+  /* Neutral: Soft Pink Grays */
+  --color-neutral-100: #faf7f8;
+  --color-neutral-200: #f5f0f1;
+  --color-neutral-900: #2d1a1f;
 
-  --color-border: #e2d1f9;
+  --color-border: #f9d1d1;
   --color-card: #ffffff;
-  --color-muted: #f3e8ff;
-  --color-muted-foreground: #7d6b91;
+  --color-muted: #fce7e7;
+  --color-muted-foreground: #a67a8a;
 }
 
 /* Dark Theme - Midnight Luxury & Neon Accents */

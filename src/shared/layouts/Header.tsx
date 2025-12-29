@@ -37,7 +37,7 @@ export default function Header() {
   return (
     <>
       {/* Promo Bar */}
-      <PromoBar />
+      {/* <PromoBar /> */}
 
       {/* Desktop Header */}
       <header
@@ -77,7 +77,7 @@ export default function Header() {
 
                       {/* Enhanced badge - Light Pink */}
                       {wishlistCount > 0 && (
-                        <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-2 flex items-center justify-center bg-gradient-to-br from-primary-300 via-primary-600 to-primary-300 text-white text-[11px] rounded-full font-bold shadow-[0_2px_10px_rgba(126,34,206,0.4),0_0_0_2px_rgba(255,255,255,0.95)] backdrop-blur-sm">
+                        <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-2 flex items-center justify-center bg-white text-neutral-600 text-[12px] rounded-full  shadow-[0_2px_10px_rgba(126,34,206,0.4),0_0_0_2px_rgba(255,255,255,0.95)] backdrop-blur-sm">
                           {wishlistCount > 99 ? "99+" : wishlistCount}
                         </span>
                       )}
@@ -104,7 +104,7 @@ export default function Header() {
 
                         {/* Enhanced badge - Deep Purple */}
                         {cartCount > 0 && (
-                          <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-2 flex items-center justify-center bg-gradient-to-br from-primary-300 via-primary-600 to-primary-300 text-white text-[11px] rounded-full font-bold shadow-[0_2px_10px_rgba(126,34,206,0.4),0_0_0_2px_rgba(255,255,255,0.95)] backdrop-blur-sm">
+                          <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-2 flex items-center justify-center bg-white text-neutral-600 text-[12px] rounded-full shadow-[0_2px_10px_rgba(126,34,206,0.4),0_0_0_2px_rgba(255,255,255,0.95)] backdrop-blur-sm">
                             {cartCount > 99 ? "99+" : cartCount}
                           </span>
                         )}

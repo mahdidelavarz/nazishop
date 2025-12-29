@@ -4,13 +4,13 @@ import { Icon } from "@iconify/react";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+// import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useCategories } from "@/features/categories/hooks/useCategories";
 import { useBrands } from "@/features/brands/hooks/useBrands";
 import { useProductsQuery } from "@/features/products/hooks/useProducts";
 
 export default function HomePage() {
-  const { user, isAuthenticated } = useAuth();
+  // const { user, isAuthenticated } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
@@ -32,21 +32,21 @@ export default function HomePage() {
       title: "کلکسیون بهار",
       subtitle: "جدیدترین رنگ‌های رژلب",
       discount: "40%",
-      image: "/images/pexels-noratopicals-7038233.jpg",
+      image: "/images/tony-chen-tPKgkwlB8PI-unsplash.jpg",
       // gradient: "from-pink-500/90 to-rose-500/90",
     },
     {
       title: "عطرهای لوکس",
       subtitle: "برندهای معتبر جهانی",
       discount: "30%",
-      image: "/images/441824c52072304ee1e81efcbde20169.jpg",
+      image: "/images/tony-chen-tPKgkwlB8PI-unsplash.jpg",
       // gradient: "from-purple-500/90 to-pink-500/90",
     },
     {
       title: "مراقبت پوست",
       subtitle: "محصولات ارگانیک و طبیعی",
       discount: "50%",
-      image: "/images/b213e892f2322d5b2132e138e65b490c.jpg",
+      image: "/images/tony-chen-tPKgkwlB8PI-unsplash.jpg",
       // gradient: "from-emerald-500/90 to-teal-500/90",
     },
   ];
@@ -61,7 +61,7 @@ export default function HomePage() {
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50">
       {/* Full Screen Hero Slider */}
-      <section className="relative h-[70vh] md:h-[75vh] overflow-hidden">
+      <section className="relative h-[70vh] md:h-[83.5vh] overflow-hidden">
         {heroSlides.map((slide, index) => (
           <div
             key={index}
@@ -69,39 +69,19 @@ export default function HomePage() {
               currentSlide === index ? "opacity-100" : "opacity-0"
             }`}
           >
-            {/* Background Image */}
-              {/* <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${slide.image})` }}
-              /> */}
-            <img src={slide.image} alt={slide.title} className="absolute inset-0 w-full h-full object-fill" />
+            <img src={slide.image} alt={slide.title} className="absolute inset-0 w-full h-full object-cover" />
 
-            {/* Overlay Gradient */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-l`}
-            />
-
-            {/* Content */}
-            <div className="relative h-full container mx-auto px-6 flex items-center justify-end">
-              <div className="max-w-2xl text-white text-right">
-                {isAuthenticated && user?.full_name && index === 0 && (
-                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-6 py-3 rounded-full mb-6 animate-fade-in">
-                    <Icon icon="ph:hand-waving-duotone" className="text-2xl" />
-                    <span className="font-medium">
-                      سلام {user.full_name} عزیز! 👋
-                    </span>
-                  </div>
-                )}
-
-                <h1 className="text-5xl md:text-7xl font-bold mb-4 animate-fade-in-up">
+            <div className="relative container mr-8 mt-8 justify-start">
+              <div className="max-w-2xl text-white text-right ">
+                <h1 className="text-5xl md:text-5xl font-bold mb-4 animate-fade-in-up">
                   {slide.title}
                 </h1>
-                <p className="text-2xl md:text-3xl mb-8 opacity-90 animate-fade-in-up animation-delay-200">
+                <p className="text-xl md:text-3xl mb-8 opacity-90 animate-fade-in-up animation-delay-200">
                   {slide.subtitle}
                 </p>
 
                 <div className="flex items-center gap-6 mb-8 animate-fade-in-up animation-delay-400">
-                  <div className="bg-white text-pink-600 px-8 py-4 rounded-2xl font-bold text-3xl shadow-2xl">
+                  <div className="bg-white/90  text-pink-600 px-8 py-4 rounded-2xl font-bold text-2xl shadow-2xl">
                     تخفیف {slide.discount}
                   </div>
                   <div className="text-xl opacity-90">فقط برای امروز!</div>
@@ -110,7 +90,7 @@ export default function HomePage() {
                 <div className="flex flex-wrap gap-4 animate-fade-in-up animation-delay-600">
                   <Link
                     href="/products"
-                    className="group flex items-center gap-3 bg-white text-gray-900 px-8 py-4 rounded-2xl hover:shadow-2xl transition-all transform hover:scale-105 font-bold text-lg"
+                    className="group flex items-center gap-3 backdrop-blur-xl shadow-sm text-white bg-white/20 px-8 py-4 rounded-2xl hover:shadow-2xl transition-all transform hover:scale-105 font-bold text-lg"
                   >
                     <span>خرید کنید</span>
                     <Icon
@@ -154,7 +134,7 @@ export default function HomePage() {
               (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
             )
           }
-          className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-4 rounded-full transition-all z-10"
+          className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-4 rounded-full transition-all z-10"
         >
           <Icon icon="ph:caret-right-bold" width={24} />
         </button>
@@ -162,7 +142,7 @@ export default function HomePage() {
           onClick={() =>
             setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
           }
-          className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-4 rounded-full transition-all z-10"
+          className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-4 rounded-full transition-all z-10"
         >
           <Icon icon="ph:caret-left-bold" width={24} />
         </button>
