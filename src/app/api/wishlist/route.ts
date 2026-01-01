@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
         id,
         user_id,
         product_id,
-        created_at,
         product:products (
           id,
           title,
@@ -30,8 +29,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("Wishlist fetch error:", error);
@@ -42,13 +40,36 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform brand from object to string
-    const items = (data || []).map((item) => ({
-      ...item,
-      product: item.product ? {
-        ...item.product,
-        brand: item.product.brand?.name ?? null,
-      } : null,
-    }));
+    const items = (data || []).map((item) => {
+      const product = item.product as {
+        id: string;
+        title: string;
+        description: string | null;
+        price: number;
+        original_price: number | null;
+        thumbnail_url: string | null;
+        slug: string;
+        brand: { name: string } | null;
+        stock: number;
+      } | null;
+      
+      return {
+        id: item.id,
+        user_id: item.user_id,
+        product_id: item.product_id,
+        product: product ? {
+          id: product.id,
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          original_price: product.original_price,
+          thumbnail_url: product.thumbnail_url,
+          slug: product.slug,
+          brand: product.brand?.name ?? null,
+          stock: product.stock,
+        } : null,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -105,7 +126,6 @@ export async function POST(request: NextRequest) {
         id,
         user_id,
         product_id,
-        created_at,
         product:products (
           id,
           title,
@@ -130,11 +150,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Transform brand from object to string
+    const product = data?.product as {
+      id: string;
+      title: string;
+      description: string | null;
+      price: number;
+      original_price: number | null;
+      thumbnail_url: string | null;
+      slug: string;
+      brand: { name: string } | null;
+      stock: number;
+    } | null;
+    
     const item = data ? {
-      ...data,
-      product: data.product ? {
-        ...data.product,
-        brand: data.product.brand?.name ?? null,
+      id: data.id,
+      user_id: data.user_id,
+      product_id: data.product_id,
+      product: product ? {
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        original_price: product.original_price,
+        thumbnail_url: product.thumbnail_url,
+        slug: product.slug,
+        brand: product.brand?.name ?? null,
+        stock: product.stock,
       } : null,
     } : null;
 
