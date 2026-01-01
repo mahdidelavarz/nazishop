@@ -1,6 +1,7 @@
 // hooks/useAuth.ts
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { useAuthStore } from '../store/auth.store';
 import { apiClient } from '@/shared/lib/api-client';
 import toast from 'react-hot-toast';
@@ -31,8 +32,8 @@ export function useAuth() {
     retry: false, // Don't retry - let interceptor handle refresh
   });
 
-  // Initialize user on mount
-  const initializeUser = async () => {
+  // Initialize user on mount - memoized to prevent infinite loops
+  const initializeUser = useCallback(async () => {
     try {
       const result = await refetch();
       
@@ -46,7 +47,7 @@ export function useAuth() {
       // Clear auth on error
       clearAuth();
     }
-  };
+  }, [refetch, setUser, clearAuth]);
 
   // Logout mutation
   const logoutMutation = useMutation({

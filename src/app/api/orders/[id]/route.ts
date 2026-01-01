@@ -20,7 +20,7 @@ export async function GET(
 
     const isAdmin = user.role === "admin";
 
-    // Fetch order including shipping fields and joined user
+    // Fetch order including shipping snapshot fields and basic user info
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .select(
@@ -31,18 +31,19 @@ export async function GET(
         status,
         shipping_cost,
         shipping_method,
+        shipping_full_name,
+        shipping_phone,
+        shipping_address_line,
+        shipping_city,
+        shipping_state,
+        shipping_postal_code,
+        shipping_country,
         created_at,
         users:users (
           id,
           email,
           full_name,
-          phone_number,
-          address,
-          postal_code,
-          birthday,
-          profile_completed,
-          created_at,
-          updated_at
+          phone_number
         )
       `
       )

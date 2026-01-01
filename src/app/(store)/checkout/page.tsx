@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { useCartQuery } from "@/features/cart/hooks/useCart";
 import { useCreateOrder, useCreatePaymentSession } from "@/features/orders/hooks/useOrders";
+import { useAddresses } from "@/features/addresses/hooks/useAddresses";
 import { ShippingMethod } from "@/features/orders/types/orderTypes";
+import toast from "react-hot-toast";
 
 const SHIPPING_OPTIONS = [
   {
@@ -31,12 +34,24 @@ const SHIPPING_OPTIONS = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: cartItems, isLoading } = useCartQuery();
+  const { data: cartItems, isLoading: cartLoading } = useCartQuery();
+  const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const createOrderMutation = useCreateOrder();
   const createPaymentMutation = useCreatePaymentSession();
   
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const isLoading = cartLoading || addressesLoading;
+
+  // Auto-select default address
+  useEffect(() => {
+    if (addresses && addresses.length > 0 && !selectedAddressId) {
+      const defaultAddress = addresses.find(a => a.is_default) || addresses[0];
+      setSelectedAddressId(defaultAddress.id);
+    }
+  }, [addresses, selectedAddressId]);
 
   const calculateSummary = () => {
     if (!cartItems || cartItems.length === 0) {
@@ -74,11 +89,17 @@ export default function CheckoutPage() {
   };
 
   const handleCreateOrder = async () => {
+    if (!selectedAddressId) {
+      toast.error("لطفا یک آدرس انتخاب کنید");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Create order
+      // Create order with address
       const orderResponse = await createOrderMutation.mutateAsync({
+        address_id: selectedAddressId,
         shipping_method: shippingMethod,
       });
 
@@ -97,14 +118,14 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
         <div className="text-center">
           <Icon
             icon="eos-icons:loading"
             className="text-accent-500 mx-auto mb-4 animate-spin"
             width={48}
           />
-          <p className="text-neutral-600">در حال بارگذاری...</p>
+          <p className="text-neutral-600 dark:text-neutral-400">در حال بارگذاری...</p>
         </div>
       </div>
     );
@@ -229,17 +250,103 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* Shipping Address */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-foreground">آدرس ارسال</h2>
+                <Link
+                  href="/addresses"
+                  className="text-sm text-accent-600 hover:text-accent-700 flex items-center gap-1"
+                >
+                  <Icon icon="ph:plus" width={16} />
+                  افزودن آدرس جدید
+                </Link>
+              </div>
+
+              {!addresses || addresses.length === 0 ? (
+                <div className="text-center py-8 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-lg">
+                  <Icon
+                    icon="ph:map-pin-duotone"
+                    className="text-neutral-400 mx-auto mb-3"
+                    width={48}
+                  />
+                  <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+                    هنوز آدرسی ثبت نکرده‌اید
+                  </p>
+                  <Link
+                    href="/addresses"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition"
+                  >
+                    <Icon icon="ph:plus-bold" width={18} />
+                    افزودن آدرس
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {addresses.map((address) => (
+                    <label
+                      key={address.id}
+                      className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${
+                        selectedAddressId === address.id
+                          ? "border-accent-500 bg-accent-50 dark:bg-accent-900/20"
+                          : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="address"
+                        value={address.id}
+                        checked={selectedAddressId === address.id}
+                        onChange={() => setSelectedAddressId(address.id)}
+                        className="w-4 h-4 mt-1 text-accent-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-foreground">
+                            {address.full_name}
+                          </span>
+                          {address.label && (
+                            <span className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded text-xs">
+                              {address.label}
+                            </span>
+                          )}
+                          {address.is_default && (
+                            <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded text-xs">
+                              پیش‌فرض
+                            </span>
+                          )}
+                        </div>
+                        {address.phone_number && (
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
+                            {address.phone_number}
+                          </p>
+                        )}
+                        <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                          {address.address_line}
+                        </p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                          {[address.city, address.state, address.postal_code]
+                            .filter(Boolean)
+                            .join("، ")}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Shipping Method */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">روش ارسال</h2>
+            <div className="bg-white dark:bg-neutral-800 rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4 text-foreground">روش ارسال</h2>
               <div className="space-y-3">
                 {SHIPPING_OPTIONS.map((option) => (
                   <label
                     key={option.value}
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition ${
+                    className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition ${
                       shippingMethod === option.value
-                        ? "border-accent-500 bg-accent-50"
-                        : "border-gray-200 hover:border-gray-300"
+                        ? "border-accent-500 bg-accent-50 dark:bg-accent-900/20"
+                        : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -257,7 +364,7 @@ export default function CheckoutPage() {
                         <p className="font-medium text-foreground">
                           {option.label}
                         </p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
                           {option.days}
                         </p>
                       </div>

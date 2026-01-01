@@ -8,6 +8,32 @@ export async function POST(request: NextRequest) {
     const { user, response } = await requireUser(request);
     if (response || !user) return response!;
 
+    const body = await request.json();
+    const { address_id, shipping_method = 'standard' } = body;
+
+    // Validate address_id is provided
+    if (!address_id) {
+      return NextResponse.json(
+        { success: false, message: "لطفا یک آدرس انتخاب کنید" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch the selected address
+    const { data: address, error: addressError } = await supabaseAdmin
+      .from("user_addresses")
+      .select("*")
+      .eq("id", address_id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (addressError || !address) {
+      return NextResponse.json(
+        { success: false, message: "آدرس انتخاب شده یافت نشد" },
+        { status: 400 }
+      );
+    }
+
     // Fetch cart items with product pricing
     const { data: cartItems, error: cartError } = await supabaseAdmin
       .from("cart_items")
@@ -36,7 +62,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const total = cartItems.reduce((sum, item) => {
+    // Calculate shipping cost based on method
+    const shippingCosts: Record<string, number> = {
+      standard: 50000,
+      express: 150000,
+      overnight: 250000,
+    };
+    const shippingCost = shippingCosts[shipping_method] || 50000;
+
+    const itemsTotal = cartItems.reduce((sum, item) => {
       const basePrice = item.products?.price ?? 0;
       const discount = item.products?.discount_percent ?? 0;
       const finalPrice =
@@ -44,15 +78,27 @@ export async function POST(request: NextRequest) {
       return sum + finalPrice * item.quantity;
     }, 0);
 
-    // Insert order
+    const total = itemsTotal + shippingCost;
+
+    // Insert order with address snapshot
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id: user.id,
         total,
         status: "pending",
+        shipping_method,
+        shipping_cost: shippingCost,
+        // Address snapshot (immutable)
+        shipping_full_name: address.full_name,
+        shipping_phone: address.phone_number,
+        shipping_address_line: address.address_line,
+        shipping_city: address.city,
+        shipping_state: address.state,
+        shipping_postal_code: address.postal_code,
+        shipping_country: address.country || 'ایران',
       })
-      .select("id, total, status, created_at")
+      .select("id, total, status, created_at, shipping_method, shipping_cost")
       .single();
 
     if (orderError || !order) {

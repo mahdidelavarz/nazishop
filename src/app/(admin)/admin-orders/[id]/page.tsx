@@ -125,18 +125,43 @@ export default function AdminOrderDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-neutral-600 mb-1">نام</p>
-                  <p className="font-medium text-foreground">{order.users.full_name}</p>
+                  <p className="font-medium text-foreground">{order.users?.full_name || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-neutral-600 mb-1">ایمیل</p>
-                  <p className="font-medium text-foreground">{order.users.email}</p>
+                  <p className="font-medium text-foreground">{order.users?.email || '-'}</p>
                 </div>
-                <div className="md:col-span-2">
-                  <p className="text-sm text-neutral-600 mb-1">آدرس ارسال</p>
+                <div>
+                  <p className="text-sm text-neutral-600 mb-1">تلفن</p>
+                  <p className="font-medium text-foreground">{order.users?.phone_number || '-'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Shipping Address (from order snapshot) */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">آدرس ارسال</h2>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm text-neutral-600 mb-1">گیرنده</p>
+                  <p className="font-medium text-foreground">{order.shipping_full_name || '-'}</p>
+                </div>
+                {order.shipping_phone && (
+                  <div>
+                    <p className="text-sm text-neutral-600 mb-1">تلفن</p>
+                    <p className="font-medium text-foreground">{order.shipping_phone}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-neutral-600 mb-1">آدرس</p>
+                  <p className="font-medium text-foreground">{order.shipping_address_line || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-neutral-600 mb-1">شهر / استان / کد پستی</p>
                   <p className="font-medium text-foreground">
-                    {order.users.address}
-                    <br />
-                    {order.users.postal_code}
+                    {[order.shipping_city, order.shipping_state, order.shipping_postal_code]
+                      .filter(Boolean)
+                      .join('، ') || '-'}
                   </p>
                 </div>
               </div>

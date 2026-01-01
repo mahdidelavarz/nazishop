@@ -77,16 +77,21 @@ export async function PATCH(
         user_id,
         total,
         status,
+        shipping_method,
+        shipping_cost,
+        shipping_full_name,
+        shipping_phone,
+        shipping_address_line,
+        shipping_city,
+        shipping_state,
+        shipping_postal_code,
+        shipping_country,
         created_at,
         users!inner(
           id,
           email,
           full_name,
-          address,
-          city,
-          state,
-          postal_code,
-          country
+          phone_number
         )
       `)
       .single();

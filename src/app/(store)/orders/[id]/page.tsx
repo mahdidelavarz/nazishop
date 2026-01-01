@@ -296,20 +296,21 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            {/* Shipping Address */}
+            {/* Shipping Address (from order snapshot) */}
             <div className="bg-white rounded-2xl shadow p-6">
               <h2 className="text-xl font-semibold mb-4">آدرس ارسال</h2>
               <div className="text-neutral-700">
-                <p className="font-medium">{order.users.full_name}</p>
-                <p>{order.users.address}</p>
+                <p className="font-medium">{order.shipping_full_name}</p>
+                {order.shipping_phone && (
+                  <p className="text-sm text-neutral-500 mb-2">{order.shipping_phone}</p>
+                )}
+                <p>{order.shipping_address_line}</p>
                 <p>
-                  {order.users.city}, {order.users.state}{" "}
-                  {order.users.postal_code}
+                  {[order.shipping_city, order.shipping_state, order.shipping_postal_code]
+                    .filter(Boolean)
+                    .join("، ")}
                 </p>
-                <p>{order.users.country}</p>
-                <p className="mt-2 text-sm text-neutral-600">
-                  {order.users.email}
-                </p>
+                {order.shipping_country && <p>{order.shipping_country}</p>}
               </div>
             </div>
           </div>

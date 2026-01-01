@@ -26,20 +26,27 @@ export interface OrderItem {
   created_at?: string;
 }
 
-// User Info Interface
+// User Info Interface (for display purposes)
 export interface OrderUserInfo {
   id: string;
-  email: string;
-  full_name: string;
-  address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
+  email: string | null;
+  full_name: string | null;
+  phone_number: string | null;
+}
+
+// Shipping Address Snapshot (immutable, stored on order)
+export interface ShippingAddressSnapshot {
+  shipping_full_name: string | null;
+  shipping_phone: string | null;
+  shipping_address_line: string | null;
+  shipping_city: string | null;
+  shipping_state: string | null;
+  shipping_postal_code: string | null;
+  shipping_country: string | null;
 }
 
 // Order Interface
-export interface Order {
+export interface Order extends ShippingAddressSnapshot {
   id: string;
   user_id: string;
   total: number;
@@ -59,6 +66,7 @@ export interface OrderWithDetails extends Order {
 
 // Create Order Payload
 export interface CreateOrderPayload {
+  address_id: string;
   shipping_method?: ShippingMethod;
 }
 
