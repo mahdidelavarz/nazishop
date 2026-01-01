@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
           original_price,
           thumbnail_url,
           slug,
-          brand,
+          brand:brands(name),
           stock
         )
       `
@@ -41,9 +41,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Transform brand from object to string
+    const items = (data || []).map((item) => ({
+      ...item,
+      product: item.product ? {
+        ...item.product,
+        brand: item.product.brand?.name ?? null,
+      } : null,
+    }));
+
     return NextResponse.json({
       success: true,
-      items: data || [],
+      items,
     });
   } catch (error) {
     console.error("Wishlist API error:", error);
@@ -105,7 +114,7 @@ export async function POST(request: NextRequest) {
           original_price,
           thumbnail_url,
           slug,
-          brand,
+          brand:brands(name),
           stock
         )
       `
@@ -120,9 +129,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Transform brand from object to string
+    const item = data ? {
+      ...data,
+      product: data.product ? {
+        ...data.product,
+        brand: data.product.brand?.name ?? null,
+      } : null,
+    } : null;
+
     return NextResponse.json({
       success: true,
-      item: data,
+      item,
       message: "محصول به لیست علاقه‌مندی‌ها اضافه شد",
     });
   } catch (error) {

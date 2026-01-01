@@ -36,7 +36,7 @@ export default function AdminNewProductPage() {
         price: data.price,
         original_price: data.original_price,
         stock: data.stock,
-        brand: data.brand?.trim() || null,
+        brand_id: data.brand_id || null,
         description: data.description?.trim() || null,
         thumbnail_url: uploadedImages[0] || data.thumbnail_url?.trim() || null,
         sku: data.sku?.trim() || null,

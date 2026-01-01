@@ -19,7 +19,7 @@ export const productFormSchema = z.object({
   sku: z.string().optional().nullable(),
   
   // Details
-  brand: z.string().optional().nullable(),
+  brand_id: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   
   // Media
@@ -48,7 +48,7 @@ export const defaultFormValues: ProductFormData = {
   original_price: null,
   stock: 0,
   sku: null,
-  brand: null,
+  brand_id: null,
   description: null,
   thumbnail_url: null,
   tags: [],

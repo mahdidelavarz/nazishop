@@ -12,7 +12,7 @@ export async function GET() {
       original_price,
       discount_percent,
       thumbnail_url,
-      brand,
+      brand:brands(name),
       stock,
       rating,
       reviews_count
@@ -27,9 +27,15 @@ export async function GET() {
     );
   }
 
+  // Transform brand from object to string
+  const products = (data ?? []).map((product) => ({
+    ...product,
+    brand: product.brand?.name ?? null,
+  }));
+
   return NextResponse.json({
     success: true,
-    products: data ?? [],
+    products,
   });
 }
 

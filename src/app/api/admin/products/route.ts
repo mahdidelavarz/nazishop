@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
         original_price,
         discount_percent,
         stock,
-        brand,
+        brand_id,
+        brand:brands(name),
         thumbnail_url,
         is_public,
         sku,
@@ -37,9 +38,15 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Transform brand from object to string for display
+    const products = (data || []).map((product) => ({
+      ...product,
+      brand: product.brand?.name ?? null,
+    }));
+
     return NextResponse.json({
       success: true,
-      products: data || [],
+      products,
     });
   } catch (error) {
     console.error('Admin products GET error:', error);
@@ -63,7 +70,7 @@ export async function POST(req: NextRequest) {
       price,
       original_price,
       stock,
-      brand,
+      brand_id,
       thumbnail_url,
       slug,
       sku,
@@ -90,7 +97,7 @@ export async function POST(req: NextRequest) {
         price,
         original_price: original_price ?? null,
         stock,
-        brand: brand ?? null,
+        brand_id: brand_id ?? null,
         thumbnail_url: thumbnail_url ?? null,
         slug,
         sku: sku ?? null,
@@ -173,7 +180,7 @@ export async function PUT(req: NextRequest) {
       price?: number;
       original_price?: number | null;
       stock?: number;
-      brand?: string | null;
+      brand_id?: string | null;
       thumbnail_url?: string | null;
       sku?: string | null;
       tags?: string[] | null;
@@ -186,7 +193,7 @@ export async function PUT(req: NextRequest) {
       'price',
       'original_price',
       'stock',
-      'brand',
+      'brand_id',
       'thumbnail_url',
       'sku',
       'tags',

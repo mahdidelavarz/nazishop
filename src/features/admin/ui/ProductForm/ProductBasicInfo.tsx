@@ -23,8 +23,11 @@ export function ProductBasicInfo({
   isEditMode = false,
 }: ProductBasicInfoProps) {
   const titleValue = watch('title');
-  const brandValue = watch('brand');
+  const brandIdValue = watch('brand_id');
   const { data: brands = [], isLoading: brandsLoading } = useBrandsLookup();
+  
+  // Find selected brand name for display
+  const selectedBrand = brands.find((b) => b.id === brandIdValue);
 
   // Auto-generate slug from title (only in create mode)
   useEffect(() => {
@@ -101,21 +104,21 @@ export function ProductBasicInfo({
             </div>
           ) : (
             <select
-              {...register('brand')}
+              {...register('brand_id')}
               className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all outline-none hover:border-gray-300 bg-white"
             >
               <option value="">انتخاب برند (اختیاری)</option>
               {brands.map((brand) => (
-                <option key={brand.id} value={brand.name}>
+                <option key={brand.id} value={brand.id}>
                   {brand.name}
                 </option>
               ))}
             </select>
           )}
-          {brandValue && (
+          {selectedBrand && (
             <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
               <Icon icon="solar:check-circle-bold-duotone" className="w-3 h-3 text-green-500" />
-              برند انتخاب شده: {brandValue}
+              برند انتخاب شده: {selectedBrand.name}
             </p>
           )}
         </div>

@@ -11,7 +11,8 @@ export interface AdminProduct {
   stock: number;
   slug: string;
   code: number; // Auto-generated identity
-  brand: string | null;
+  brand_id: string | null;
+  brand: string | null; // Brand name from join
   currency: string; // Default: 'IRT'
   sku: string | null;
   rating: number; // 0-5
@@ -31,7 +32,8 @@ export interface AdminProductListItem {
   original_price: number | null;
   discount_percent: number | null;
   stock: number;
-  brand: string | null;
+  brand_id: string | null;
+  brand: string | null; // Brand name from join
   thumbnail_url: string | null;
   is_public: boolean;
   sku: string | null;
@@ -56,7 +58,7 @@ export interface CreateProductPayload {
   stock: number;
   description?: string | null;
   original_price?: number | null;
-  brand?: string | null;
+  brand_id?: string | null;
   thumbnail_url?: string | null;
   sku?: string | null;
   tags?: string[] | null;
@@ -91,7 +93,7 @@ export interface ProductFormData {
   price: number;
   original_price: number | null;
   stock: number;
-  brand: string | null;
+  brand_id: string | null;
   description: string | null;
   thumbnail_url: string | null;
   sku: string | null;

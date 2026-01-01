@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         description,
         price,
         original_price,
-        brand,
+        brand:brands(name),
         stock,
         thumbnail_url,
         slug,
@@ -47,6 +47,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     const product = {
       ...data,
+      brand: data.brand?.name ?? null,
       product_details: detailsData ? {
         description: detailsData.description,
         specifications: detailsData.specifications,
